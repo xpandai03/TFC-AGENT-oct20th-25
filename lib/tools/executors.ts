@@ -1,0 +1,99 @@
+import type { WriteStatusParams, AddNoteParams } from './schemas'
+
+/**
+ * n8n Webhook URLs for tool execution
+ */
+const N8N_WEBHOOKS = {
+  writeStatus: 'https://n8n-familyconnection.agentglu.agency/webhook/update-contact-status',
+  addNote: 'https://n8n-familyconnection.agentglu.agency/webhook-test/update-agent-notes',
+}
+
+/**
+ * Execute writeStatusToContact tool
+ * Calls n8n webhook to update a client's status in Excel
+ */
+export async function executeWriteStatus(params: WriteStatusParams) {
+  console.log('🔧 Tool: writeStatusToContact called with:', params)
+
+  try {
+    const response = await fetch(N8N_WEBHOOKS.writeStatus, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        patientName: params.patientName,
+        status: params.status,
+        editor: params.editor,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('❌ n8n webhook error:', response.status, response.statusText)
+      return {
+        success: false,
+        message: `Failed to update status: ${response.statusText}`,
+      }
+    }
+
+    const data = await response.json()
+    console.log('✅ n8n response:', data)
+
+    return {
+      success: true,
+      message: `Successfully updated ${params.patientName}'s status to "${params.status}"`,
+      data,
+    }
+  } catch (error) {
+    console.error('❌ Error calling n8n webhook:', error)
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    }
+  }
+}
+
+/**
+ * Execute addNoteToContact tool
+ * Calls n8n webhook to add a note to a client's record
+ */
+export async function executeAddNote(params: AddNoteParams) {
+  console.log('🔧 Tool: addNoteToContact called with:', params)
+
+  try {
+    const response = await fetch(N8N_WEBHOOKS.addNote, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        patientName: params.patientName,
+        note: params.note,
+        editor: params.editor,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('❌ n8n webhook error:', response.status, response.statusText)
+      return {
+        success: false,
+        message: `Failed to add note: ${response.statusText}`,
+      }
+    }
+
+    const data = await response.json()
+    console.log('✅ n8n response:', data)
+
+    return {
+      success: true,
+      message: `Successfully added note to ${params.patientName}'s record`,
+      data,
+    }
+  } catch (error) {
+    console.error('❌ Error calling n8n webhook:', error)
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    }
+  }
+}
