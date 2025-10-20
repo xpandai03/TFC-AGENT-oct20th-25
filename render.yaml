@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: dawn-ai-assistant
+    env: node
+    region: oregon
+    plan: starter # Upgrade to Standard ($25/mo) for production HIPAA compliance
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      # NextAuth Configuration
+      - key: NEXTAUTH_URL
+        sync: false # Set manually in Render dashboard to your app URL
+      - key: NEXTAUTH_SECRET
+        generateValue: true # Render auto-generates secure secret
+
+      # Azure AD Configuration
+      - key: AZURE_AD_CLIENT_ID
+        sync: false # From Azure Portal App Registration
+      - key: AZURE_AD_CLIENT_SECRET
+        sync: false # From Azure Portal App Registration
+      - key: AZURE_AD_TENANT_ID
+        sync: false # From Azure Portal App Registration
+
+      # Azure OpenAI Configuration (existing)
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+      - key: AZURE_RESOURCE_NAME
+        sync: false
+      - key: AZURE_DEPLOYMENT_NAME
+        sync: false
+      - key: AZURE_API_VERSION
+        sync: false
