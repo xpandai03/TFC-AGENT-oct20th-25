@@ -1,4 +1,4 @@
-import type { WriteStatusParams, AddNoteParams } from './schemas'
+import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams } from './definitions'
 
 /**
  * n8n Webhook URLs for tool execution
@@ -6,6 +6,7 @@ import type { WriteStatusParams, AddNoteParams } from './schemas'
 const N8N_WEBHOOKS = {
   writeStatus: 'https://n8n-familyconnection.agentglu.agency/webhook/update-contact-status',
   addNote: 'https://n8n-familyconnection.agentglu.agency/webhook-test/update-agent-notes',
+  searchDatabase: 'https://n8n-familyconnection.agentglu.agency/webhook/query-excel-data',
 }
 
 /**
@@ -87,6 +88,49 @@ export async function executeAddNote(params: AddNoteParams) {
     return {
       success: true,
       message: `Successfully added note to ${params.patientName}'s record`,
+      data,
+    }
+  } catch (error) {
+    console.error('❌ Error calling n8n webhook:', error)
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    }
+  }
+}
+
+/**
+ * Execute searchDatabase tool
+ * Calls n8n webhook to search the client database
+ */
+export async function executeSearchDatabase(params: SearchDatabaseParams) {
+  console.log('🔧 Tool: searchDatabase called with:', params)
+
+  try {
+    const response = await fetch(N8N_WEBHOOKS.searchDatabase, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: params.query,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('❌ n8n webhook error:', response.status, response.statusText)
+      return {
+        success: false,
+        message: `Failed to search database: ${response.statusText}`,
+      }
+    }
+
+    const data = await response.json()
+    console.log('✅ n8n response:', data)
+
+    return {
+      success: true,
+      message: `Search completed for query: "${params.query}"`,
       data,
     }
   } catch (error) {
