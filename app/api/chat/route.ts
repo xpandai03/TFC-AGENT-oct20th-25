@@ -1,24 +1,17 @@
-import { auth } from '@/auth'
+// TEMPORARY: Auth disabled for initial deployment - will re-enable in Phase 2
+// import { auth } from '@/auth'
+// import { logChatAccess, logToolCall } from '@/lib/audit/logger'
+
 import { openai, deploymentName } from '@/lib/azure-config'
 import { tools } from '@/lib/tools/definitions'
 import { handleToolCall } from '@/lib/agent/tool-handler'
 import { DAWN_SYSTEM_PROMPT } from '@/lib/agent/prompts'
-import { logChatAccess, logToolCall } from '@/lib/audit/logger'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 
 export async function POST(request: Request) {
   try {
-    // Authentication check
-    const session = await auth()
-    if (!session?.user?.email) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized - Please sign in' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const userEmail = session.user.email
-    console.log(`🔐 Authorized request from: ${userEmail}`)
+    // TEMPORARY: Authentication disabled for Phase 1 deployment
+    // Will re-enable in Phase 2
 
     const body = await request.json()
     const { message, history } = body
@@ -29,9 +22,6 @@ export async function POST(request: Request) {
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       )
     }
-
-    // Audit log: Chat access
-    logChatAccess(userEmail, message)
 
     console.log('💬 DAWN received message:', message)
     console.log('📚 Conversation history:', history?.length || 0, 'previous messages')
@@ -119,8 +109,8 @@ export async function POST(request: Request) {
 
           console.log(`  ✅ Tool result:`, result)
 
-          // Audit log: Tool call
-          logToolCall(userEmail, toolCall.function.name, args, result)
+          // TEMPORARY: Audit logging disabled for Phase 1
+          // logToolCall(userEmail, toolCall.function.name, args, result)
 
           // Add tool result to messages
           currentMessages.push({
@@ -136,8 +126,8 @@ export async function POST(request: Request) {
             message: `Error executing tool: ${error instanceof Error ? error.message : 'Unknown error'}`
           }
 
-          // Audit log: Failed tool call
-          logToolCall(userEmail, toolCall.function.name, {}, errorResult)
+          // TEMPORARY: Audit logging disabled for Phase 1
+          // logToolCall(userEmail, toolCall.function.name, {}, errorResult)
 
           // Add error as tool result
           currentMessages.push({
