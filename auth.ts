@@ -9,6 +9,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: process.env.AZURE_AD_CLIENT_ID!,
       clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
       tenantId: process.env.AZURE_AD_TENANT_ID!,
+      authorization: {
+        params: {
+          scope: "openid profile email User.Read"
+        }
+      },
+      // Force tenant-specific endpoint (not /common/) for single-tenant apps
+      issuer: `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID}/v2.0`,
     }),
   ],
   session: {
