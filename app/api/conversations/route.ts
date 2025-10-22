@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { getConversationsForUser } from '@/lib/db/conversations'
+import { getConversationsForUser, createConversation } from '@/lib/db/conversations'
 
 /**
  * GET /api/conversations
@@ -36,6 +36,59 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         error: 'Failed to fetch conversations',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * POST /api/conversations
+ * Create a new conversation for the authenticated user
+ */
+export async function POST(request: Request) {
+  try {
+    // 1. Check authentication
+    const session = await auth()
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Please sign in' },
+        { status: 401 }
+      )
+    }
+
+    const userEmail = session.user.email
+
+    // 2. Parse request body
+    const body = await request.json()
+    const { title } = body
+
+    if (!title || title.trim() === '') {
+      return NextResponse.json(
+        { error: 'Title is required' },
+        { status: 400 }
+      )
+    }
+
+    console.log('📝 Creating conversation:', title, 'for user:', userEmail)
+
+    // 3. Create conversation in database
+    const conversation = await createConversation(userEmail, { title })
+
+    console.log(`✅ Conversation created successfully: ${conversation.id}`)
+
+    // 4. Return new conversation
+    return NextResponse.json(
+      { conversation },
+      { status: 201 }
+    )
+
+  } catch (error) {
+    console.error('❌ Error creating conversation:', error)
+    return NextResponse.json(
+      {
+        error: 'Failed to create conversation',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

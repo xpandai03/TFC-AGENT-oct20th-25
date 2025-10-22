@@ -43,3 +43,39 @@ export async function getConversationsForUser(userEmail: string) {
 
   return conversations
 }
+
+/**
+ * Create a new conversation for a user
+ */
+export async function createConversation(
+  userEmail: string,
+  data: {
+    title: string
+  }
+) {
+  // Ensure user exists
+  const user = await getOrCreateUser(userEmail)
+
+  // Create conversation
+  const conversation = await prisma.conversation.create({
+    data: {
+      userId: user.id,
+      title: data.title,
+      preview: '', // Empty initially
+      messageCount: 0,
+    },
+    select: {
+      id: true,
+      title: true,
+      preview: true,
+      pinned: true,
+      messageCount: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  })
+
+  console.log(`✅ Created conversation: ${conversation.id} for user: ${userEmail}`)
+
+  return conversation
+}
