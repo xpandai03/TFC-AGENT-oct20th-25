@@ -185,6 +185,31 @@ export default function AIAssistantUI() {
     }
   }
 
+  async function loadMessages(conversationId) {
+    try {
+      console.log('📬 Loading messages for conversation:', conversationId)
+
+      const response = await fetch(`/api/conversations/${conversationId}/messages`)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch messages: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log(`✅ Loaded ${data.messages.length} messages`)
+
+      // Update conversation's messages in state
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === conversationId
+            ? { ...c, messages: data.messages }
+            : c
+        )
+      )
+    } catch (error) {
+      console.error('❌ Failed to load messages:', error)
+    }
+  }
+
   async function createNewChat() {
     try {
       console.log('➕ Creating new conversation...')
@@ -215,6 +240,9 @@ export default function AIAssistantUI() {
       setConversations((prev) => [newConversation, ...prev])
       setSelectedId(newConversation.id)
       setSidebarOpen(false)
+
+      // Load messages (will be empty for new conversation, but sets up structure)
+      await loadMessages(newConversation.id)
     } catch (error) {
       console.error('❌ Failed to create new chat:', error)
       alert('Failed to create new conversation. Please try again.')
@@ -270,6 +298,18 @@ export default function AIAssistantUI() {
     const assistantMsgId = Math.random().toString(36).slice(2)
 
     try {
+      // STEP 1: Save user message to database
+      console.log('💾 Saving user message to database...')
+      await fetch(`/api/conversations/${convId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'user',
+          content: content,
+        }),
+      })
+      console.log('✅ User message saved')
+
       console.log('💬 Sending message to DAWN:', content)
       console.log('📝 With conversation history:', historyForAPI.length, 'previous messages')
 
@@ -362,6 +402,18 @@ export default function AIAssistantUI() {
       }
 
       console.log('✅ DAWN response complete')
+
+      // STEP 3: Save assistant message to database
+      console.log('💾 Saving assistant message to database...')
+      await fetch(`/api/conversations/${currentConvId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: 'assistant',
+          content: accumulatedText,
+        }),
+      })
+      console.log('✅ Assistant message saved')
     } catch (error) {
       console.error('❌ Error calling DAWN:', error)
       setIsThinking(false)
@@ -471,6 +523,7 @@ export default function AIAssistantUI() {
           onSelect={(id) => {
             setSelectedId(id)
             setSidebarOpen(false) // Close sidebar on mobile when selecting conversation
+            loadMessages(id) // Load messages for selected conversation
           }}
           togglePin={togglePin}
           onDelete={handleDeleteConversation}
