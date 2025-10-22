@@ -189,12 +189,13 @@ export default function Sidebar({
       </AnimatePresence>
 
       <AnimatePresence>
-        {(open || typeof window !== "undefined") && (
+        {typeof window !== "undefined" && (
           <motion.aside
             key="sidebar"
-            initial={{ x: -340 }}
-            animate={{ x: open ? 0 : 0 }}
-            exit={{ x: -340 }}
+            initial={false}
+            animate={{
+              x: open ? 0 : typeof window !== "undefined" && window.innerWidth >= 768 ? 0 : -340
+            }}
             transition={{ type: "spring", stiffness: 260, damping: 28 }}
             className={cls(
               "z-50 flex h-full w-80 shrink-0 flex-col border-r border-zinc-200/60 bg-white dark:border-zinc-800 dark:bg-zinc-900",

@@ -394,7 +394,10 @@ export default function AIAssistantUI() {
           folders={folders}
           folderCounts={folderCounts}
           selectedId={selectedId}
-          onSelect={(id) => setSelectedId(id)}
+          onSelect={(id) => {
+            setSelectedId(id)
+            setSidebarOpen(false) // Close sidebar on mobile when selecting conversation
+          }}
           togglePin={togglePin}
           query={query}
           setQuery={setQuery}
