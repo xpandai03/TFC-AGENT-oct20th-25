@@ -79,3 +79,38 @@ export async function createConversation(
 
   return conversation
 }
+
+/**
+ * Delete a conversation (soft delete)
+ * Sets deletedAt timestamp instead of removing from database
+ */
+export async function deleteConversation(
+  userEmail: string,
+  conversationId: string
+) {
+  // 1. Ensure user exists
+  const user = await getOrCreateUser(userEmail)
+
+  // 2. Verify ownership
+  const conversation = await prisma.conversation.findFirst({
+    where: {
+      id: conversationId,
+      userId: user.id,
+      deletedAt: null, // Not already deleted
+    },
+  })
+
+  if (!conversation) {
+    throw new Error('Conversation not found or already deleted')
+  }
+
+  // 3. Soft delete (set deletedAt timestamp)
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { deletedAt: new Date() },
+  })
+
+  console.log(`🗑️ Deleted conversation: ${conversationId} for user: ${userEmail}`)
+
+  return { success: true }
+}
