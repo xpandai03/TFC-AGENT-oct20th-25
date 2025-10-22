@@ -14,6 +14,7 @@
     "@ai-sdk/azure": "^2.0.53",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
+    "@prisma/client": "^6.18.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",
@@ -75,6 +76,7 @@
     "@types/react-dom": "^19",
     "dotenv": "^17.2.3",
     "postcss": "^8.5",
+    "prisma": "^6.18.0",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.6",
     "typescript": "^5"

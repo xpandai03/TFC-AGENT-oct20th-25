@@ -1,0 +1,42 @@
+// Prisma Schema for DAWN AI Assistant
+// Database: PostgreSQL on Render
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - stores authenticated users from NextAuth
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String?
+  conversations Conversation[]
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@map("users")
+}
+
+// Conversation model - stores user chat conversations
+model Conversation {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  preview      String?
+  pinned       Boolean   @default(false)
+  messageCount Int       @default(0) @map("message_count")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at") // Soft delete for HIPAA compliance
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@index([deletedAt])
+  @@map("conversations")
+}
