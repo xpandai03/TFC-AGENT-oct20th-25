@@ -7,6 +7,7 @@ import Header from "./Header"
 import ChatPane from "./ChatPane"
 import GhostIconButton from "./GhostIconButton"
 import ThemeToggle from "./ThemeToggle"
+import MoveFolderModal from "./MoveFolderModal"
 import { INITIAL_CONVERSATIONS, INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData"
 
 export default function AIAssistantUI() {
@@ -183,6 +184,35 @@ export default function AIAssistantUI() {
       console.error('❌ Failed to delete conversation:', error)
       alert('Failed to delete conversation. Please try again.')
     }
+  }
+
+  // Move to Folder Modal State
+  const [showMoveFolderModal, setShowMoveFolderModal] = useState(false)
+  const [conversationToMove, setConversationToMove] = useState(null)
+
+  function handleMoveToFolder(conversationId) {
+    setConversationToMove(conversationId)
+    setShowMoveFolderModal(true)
+  }
+
+  function moveConversationToFolder(folderName) {
+    if (!conversationToMove) return
+
+    console.log('📁 Moving conversation', conversationToMove, 'to folder:', folderName)
+
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === conversationToMove
+          ? { ...c, folder: folderName }
+          : c
+      )
+    )
+
+    console.log('✅ Conversation moved to folder:', folderName)
+
+    // Close modal and reset
+    setShowMoveFolderModal(false)
+    setConversationToMove(null)
   }
 
   async function loadMessages(conversationId) {
@@ -531,6 +561,7 @@ export default function AIAssistantUI() {
           }}
           togglePin={togglePin}
           onDelete={handleDeleteConversation}
+          onMoveToFolder={handleMoveToFolder}
           query={query}
           setQuery={setQuery}
           searchRef={searchRef}
@@ -554,6 +585,16 @@ export default function AIAssistantUI() {
           />
         </main>
       </div>
+
+      {/* Move to Folder Modal */}
+      <MoveFolderModal
+        isOpen={showMoveFolderModal}
+        onClose={() => setShowMoveFolderModal(false)}
+        folders={folders}
+        currentFolder={conversationToMove ? conversations.find(c => c.id === conversationToMove)?.folder : null}
+        onMoveToFolder={moveConversationToFolder}
+        conversationTitle={conversationToMove ? conversations.find(c => c.id === conversationToMove)?.title : null}
+      />
     </div>
   )
 }

@@ -1,8 +1,8 @@
 import React from "react";
-import { Star, Trash2 } from "lucide-react";
+import { Star, Trash2, FolderIcon } from "lucide-react";
 import { cls, timeAgo } from "./utils";
 
-export default function ConversationRow({ data, active, onSelect, onTogglePin, onDelete, showMeta }) {
+export default function ConversationRow({ data, active, onSelect, onTogglePin, onDelete, onMoveToFolder, showMeta }) {
   const count = Array.isArray(data.messages) ? data.messages.length : data.messageCount;
   return (
     <div className="group relative">
@@ -44,6 +44,19 @@ export default function ConversationRow({ data, active, onSelect, onTogglePin, o
             <Star className="h-4 w-4" />
           )}
         </button>
+        {onMoveToFolder && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveToFolder();
+            }}
+            title="Move to Folder"
+            className="rounded-md p-1 text-zinc-500 opacity-0 transition group-hover:opacity-100 hover:bg-zinc-200/50 dark:text-zinc-300 dark:hover:bg-zinc-700/60"
+            aria-label="Move conversation to folder"
+          >
+            <FolderIcon className="h-4 w-4" />
+          </button>
+        )}
         {onDelete && (
           <button
             onClick={(e) => {

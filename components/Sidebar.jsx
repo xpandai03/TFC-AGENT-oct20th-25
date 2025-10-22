@@ -40,6 +40,7 @@ export default function Sidebar({
   onSelect,
   togglePin,
   onDelete = () => {},
+  onMoveToFolder = () => {},
   query,
   setQuery,
   searchRef,
@@ -281,6 +282,7 @@ export default function Sidebar({
                       active={c.id === selectedId}
                       onSelect={() => onSelect(c.id)}
                       onTogglePin={() => togglePin(c.id)}
+                      onMoveToFolder={() => onMoveToFolder(c.id)}
                       onDelete={() => onDelete(c.id)}
                     />
                   ))
@@ -305,6 +307,7 @@ export default function Sidebar({
                       active={c.id === selectedId}
                       onSelect={() => onSelect(c.id)}
                       onTogglePin={() => togglePin(c.id)}
+                      onMoveToFolder={() => onMoveToFolder(c.id)}
                       onDelete={() => onDelete(c.id)}
                       showMeta
                     />
@@ -335,6 +338,7 @@ export default function Sidebar({
                       selectedId={selectedId}
                       onSelect={onSelect}
                       togglePin={togglePin}
+                      onMoveToFolder={onMoveToFolder}
                       onDelete={onDelete}
                       onDeleteFolder={handleDeleteFolder}
                       onRenameFolder={handleRenameFolder}
