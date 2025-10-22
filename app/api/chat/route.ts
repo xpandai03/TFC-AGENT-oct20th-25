@@ -1,6 +1,5 @@
-// TEMPORARY: Auth disabled for initial deployment - will re-enable in Phase 2
-// import { auth } from '@/auth'
-// import { logChatAccess, logToolCall } from '@/lib/audit/logger'
+import { auth } from '@/auth'
+import { logChatAccess, logToolCall } from '@/lib/audit/logger'
 
 import { openai, deploymentName } from '@/lib/azure-config'
 import { tools } from '@/lib/tools/definitions'
@@ -10,11 +9,23 @@ import type { ChatCompletionMessageParam } from 'openai/resources/chat/completio
 
 export async function POST(request: Request) {
   try {
-    // TEMPORARY: Authentication disabled for Phase 1 deployment
-    // Will re-enable in Phase 2
-
     const body = await request.json()
     const { message, history } = body
+
+    // Authentication check - require valid session
+    const session = await auth()
+    if (!session?.user?.email) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Please sign in' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const userEmail = session.user.email
+    console.log('👤 Authenticated user:', userEmail)
+
+    // HIPAA Audit: Log chat access
+    logChatAccess(userEmail, message)
 
     if (!message) {
       return new Response(
@@ -109,8 +120,8 @@ export async function POST(request: Request) {
 
           console.log(`  ✅ Tool result:`, result)
 
-          // TEMPORARY: Audit logging disabled for Phase 1
-          // logToolCall(userEmail, toolCall.function.name, args, result)
+          // HIPAA Audit: Log successful tool call
+          logToolCall(userEmail, toolCall.function.name, args, result)
 
           // Add tool result to messages
           currentMessages.push({
@@ -126,8 +137,8 @@ export async function POST(request: Request) {
             message: `Error executing tool: ${error instanceof Error ? error.message : 'Unknown error'}`
           }
 
-          // TEMPORARY: Audit logging disabled for Phase 1
-          // logToolCall(userEmail, toolCall.function.name, {}, errorResult)
+          // HIPAA Audit: Log failed tool call
+          logToolCall(userEmail, toolCall.function.name, {}, errorResult)
 
           // Add error as tool result
           currentMessages.push({
