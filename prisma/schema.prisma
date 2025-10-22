@@ -32,6 +32,7 @@ model Conversation {
   preview      String?
   pinned       Boolean   @default(false)
   messageCount Int       @default(0) @map("message_count")
+  messages     Message[] // Relation to messages
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   deletedAt    DateTime? @map("deleted_at") // Soft delete for HIPAA compliance
@@ -39,4 +40,17 @@ model Conversation {
   @@index([userId, updatedAt(sort: Desc)])
   @@index([deletedAt])
   @@map("conversations")
+}
+
+// Message model - stores individual chat messages
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String // "user" or "assistant"
+  content        String       @db.Text // Full message text
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([conversationId, createdAt(sort: Asc)])
+  @@map("messages")
 }
