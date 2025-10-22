@@ -53,5 +53,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: '/auth/signin',
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: true, // Enable debug mode to see actual errors
+  logger: {
+    error(code, metadata) {
+      console.error('NextAuth Error:', code, JSON.stringify(metadata, null, 2))
+    },
+    warn(code) {
+      console.warn('NextAuth Warning:', code)
+    },
+    debug(code, metadata) {
+      console.log('NextAuth Debug:', code, JSON.stringify(metadata, null, 2))
+    }
+  },
 })
