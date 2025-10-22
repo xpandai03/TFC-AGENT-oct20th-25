@@ -5,9 +5,9 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'TFC Agent Hub',
+  description: 'Mental Health AI Assistant Platform - The Family Connection',
+  generator: 'The Family Connection',
 }
 
 export default function RootLayout({
