@@ -1,8 +1,8 @@
 import React from "react";
-import { Star } from "lucide-react";
+import { Star, Trash2 } from "lucide-react";
 import { cls, timeAgo } from "./utils";
 
-export default function ConversationRow({ data, active, onSelect, onTogglePin, showMeta }) {
+export default function ConversationRow({ data, active, onSelect, onTogglePin, onDelete, showMeta }) {
   const count = Array.isArray(data.messages) ? data.messages.length : data.messageCount;
   return (
     <div className="group relative">
@@ -44,6 +44,21 @@ export default function ConversationRow({ data, active, onSelect, onTogglePin, s
             <Star className="h-4 w-4" />
           )}
         </button>
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm('Delete this conversation? This cannot be undone.')) {
+                onDelete();
+              }
+            }}
+            title="Delete"
+            className="rounded-md p-1 text-red-500 opacity-0 transition group-hover:opacity-100 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/30"
+            aria-label="Delete conversation"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </button>
 
       <div className="pointer-events-none absolute left-[calc(100%+6px)] top-1 hidden w-64 rounded-xl border border-zinc-200 bg-white p-3 text-xs text-zinc-700 shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 md:group-hover:block">

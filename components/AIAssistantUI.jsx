@@ -71,10 +71,33 @@ export default function AIAssistantUI() {
     } catch {}
   }, [sidebarCollapsed])
 
-  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS)
+  const [conversations, setConversations] = useState([])
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true)
   const [selectedId, setSelectedId] = useState(null)
   const [templates, setTemplates] = useState(INITIAL_TEMPLATES)
   const [folders, setFolders] = useState(INITIAL_FOLDERS)
+
+  // Fetch conversations from API on mount
+  useEffect(() => {
+    async function loadConversations() {
+      setIsLoadingConversations(true)
+      try {
+        const response = await fetch('/api/conversations')
+        if (!response.ok) throw new Error('Failed to fetch conversations')
+
+        const data = await response.json()
+        console.log('📂 Loaded conversations from API:', data.conversations.length)
+        setConversations(data.conversations)
+      } catch (error) {
+        console.error('❌ Failed to load conversations:', error)
+        // Keep empty array on error
+      } finally {
+        setIsLoadingConversations(false)
+      }
+    }
+
+    loadConversations()
+  }, [])
 
   const [query, setQuery] = useState("")
   const searchRef = useRef(null)
@@ -130,21 +153,72 @@ export default function AIAssistantUI() {
     setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)))
   }
 
-  function createNewChat() {
-    const id = Math.random().toString(36).slice(2)
-    const item = {
-      id,
-      title: "New Chat",
-      updatedAt: new Date().toISOString(),
-      messageCount: 0,
-      preview: "Say hello to start...",
-      pinned: false,
-      folder: "Work Projects",
-      messages: [], // Ensure messages array is empty for new chats
+  async function handleDeleteConversation(id) {
+    try {
+      console.log('🗑️ Deleting conversation:', id)
+
+      const response = await fetch(`/api/conversations/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete conversation: ${response.status}`)
+      }
+
+      console.log('✅ Conversation deleted:', id)
+
+      // Remove from local state
+      setConversations((prev) => prev.filter((c) => c.id !== id))
+
+      // If the deleted conversation was selected, clear selection or select another
+      if (selectedId === id) {
+        const remaining = conversations.filter((c) => c.id !== id)
+        if (remaining.length > 0) {
+          setSelectedId(remaining[0].id)
+        } else {
+          setSelectedId(null)
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to delete conversation:', error)
+      alert('Failed to delete conversation. Please try again.')
     }
-    setConversations((prev) => [item, ...prev])
-    setSelectedId(id)
-    setSidebarOpen(false)
+  }
+
+  async function createNewChat() {
+    try {
+      console.log('➕ Creating new conversation...')
+
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'New Chat',
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to create conversation: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const newConversation = {
+        ...data.conversation,
+        messages: [], // Initialize empty messages array
+      }
+
+      console.log('✅ Created conversation:', newConversation.id)
+
+      // Add to local state
+      setConversations((prev) => [newConversation, ...prev])
+      setSelectedId(newConversation.id)
+      setSidebarOpen(false)
+    } catch (error) {
+      console.error('❌ Failed to create new chat:', error)
+      alert('Failed to create new conversation. Please try again.')
+    }
   }
 
   function createFolder() {
@@ -399,6 +473,7 @@ export default function AIAssistantUI() {
             setSidebarOpen(false) // Close sidebar on mobile when selecting conversation
           }}
           togglePin={togglePin}
+          onDelete={handleDeleteConversation}
           query={query}
           setQuery={setQuery}
           searchRef={searchRef}
