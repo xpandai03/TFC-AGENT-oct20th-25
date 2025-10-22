@@ -4,14 +4,14 @@ import { useState } from "react"
 import GhostIconButton from "./GhostIconButton"
 
 export default function Header({ createNewChat, sidebarCollapsed, setSidebarOpen }) {
-  const [selectedBot, setSelectedBot] = useState("GPT-5")
+  const [selectedBot, setSelectedBot] = useState("D.A.W.N")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const chatbots = [
-    { name: "GPT-5", icon: "🤖" },
-    { name: "Claude Sonnet 4", icon: "🎭" },
-    { name: "Gemini", icon: "💎" },
-    { name: "Assistant", icon: <Asterisk className="h-4 w-4" /> },
+    { name: "D.A.W.N", icon: "🤖" },
+    { name: "Lisa", icon: "🎭" },
+    { name: "Secret Agent #1", icon: "💎" },
+    { name: "Secret Agent #2", icon: <Asterisk className="h-4 w-4" /> },
   ]
 
   return (
