@@ -3,6 +3,7 @@ import AzureADProvider from "next-auth/providers/azure-ad"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true, // Required for production deployment on Render
   providers: [
     AzureADProvider({
       clientId: process.env.AZURE_AD_CLIENT_ID!,
