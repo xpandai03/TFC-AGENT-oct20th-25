@@ -5,6 +5,7 @@ import { processDocument } from '@/lib/services/document-processor'
 import { chunkText } from '@/lib/services/text-chunker'
 import { generateEmbeddingsBatch } from '@/lib/services/embedding'
 import { storeDocumentChunks, updateDocumentStatus } from '@/lib/services/vector-store'
+import { saveFile } from '@/lib/services/file-storage'
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const ALLOWED_MIME_TYPES = [
@@ -69,7 +70,8 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Create document record in database
+    // Create document record in database with temporary fileUrl
+    // We'll save the actual file after getting the document ID
     const document = await prisma.document.create({
       data: {
         userId: userEmail,
@@ -77,11 +79,23 @@ export async function POST(request: NextRequest) {
         fileName: file.name,
         fileType: file.type.split('/').pop() || 'unknown',
         fileSize: file.size,
+        fileUrl: 'pending', // Temporary placeholder, will be updated after file save
         processingStatus: 'processing',
       },
     })
 
     console.log(`✅ Document record created: ${document.id}`)
+
+    // Save file to disk with document ID in filename
+    const fileUrl = await saveFile(buffer, file.name, document.id)
+
+    // Update document with actual file URL
+    await prisma.document.update({
+      where: { id: document.id },
+      data: { fileUrl },
+    })
+
+    console.log(`💾 File saved: ${fileUrl}`)
 
     // Process document asynchronously (don't block response)
     processDocumentAsync(document.id, buffer, file.name, file.type)
@@ -96,6 +110,7 @@ export async function POST(request: NextRequest) {
         fileName: document.fileName,
         fileType: document.fileType,
         fileSize: document.fileSize,
+        fileUrl,
         processingStatus: document.processingStatus,
         createdAt: document.createdAt,
       },
