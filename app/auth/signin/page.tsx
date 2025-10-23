@@ -31,10 +31,10 @@ export default function SignIn() {
       {/* Content - exact structure from reference */}
       <div className="relative z-10 min-h-screen flex items-start justify-center px-8 pt-16 md:pt-24">
         <div className="max-w-2xl w-full text-center space-y-8">
-          {/* Logo - exact copy from reference */}
+          {/* Logo - using GitHub raw URL to bypass Render static file serving issue */}
           <div className="flex justify-center">
             <Image
-              src="/images/logo-white.png"
+              src="https://raw.githubusercontent.com/xpandai03/TFC-AGENT-oct20th-25/main/public/images/logo-white.png"
               alt="Logo"
               width={400}
               height={150}
