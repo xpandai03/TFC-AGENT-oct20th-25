@@ -5,6 +5,7 @@ import { Calendar, LayoutGrid, MoreHorizontal } from "lucide-react"
 import Sidebar from "./Sidebar"
 import Header from "./Header"
 import ChatPane from "./ChatPane"
+import LisaChatPane from "./LisaChatPane"
 import GhostIconButton from "./GhostIconButton"
 import ThemeToggle from "./ThemeToggle"
 import MoveFolderModal from "./MoveFolderModal"
@@ -736,15 +737,28 @@ export default function AIAssistantUI() {
             currentConversationId={selectedId}
             onMoveToFolder={handleMoveToFolder}
           />
-          <ChatPane
-            ref={composerRef}
-            conversation={selected}
-            onSend={(content) => selected && sendMessage(selected.id, content)}
-            onEditMessage={(messageId, newContent) => selected && editMessage(selected.id, messageId, newContent)}
-            onResendMessage={(messageId) => selected && resendMessage(selected.id, messageId)}
-            isThinking={isThinking && thinkingConvId === selected?.id}
-            onPauseThinking={pauseThinking}
-          />
+          {/* Conditionally render LisaChatPane or ChatPane based on agent type */}
+          {selected?.agentType === 'lisa' ? (
+            <LisaChatPane
+              ref={composerRef}
+              conversation={selected}
+              onSend={(content) => selected && sendMessage(selected.id, content)}
+              onEditMessage={(messageId, newContent) => selected && editMessage(selected.id, messageId, newContent)}
+              onResendMessage={(messageId) => selected && resendMessage(selected.id, messageId)}
+              isThinking={isThinking && thinkingConvId === selected?.id}
+              onPauseThinking={pauseThinking}
+            />
+          ) : (
+            <ChatPane
+              ref={composerRef}
+              conversation={selected}
+              onSend={(content) => selected && sendMessage(selected.id, content)}
+              onEditMessage={(messageId, newContent) => selected && editMessage(selected.id, messageId, newContent)}
+              onResendMessage={(messageId) => selected && resendMessage(selected.id, messageId)}
+              isThinking={isThinking && thinkingConvId === selected?.id}
+              onPauseThinking={pauseThinking}
+            />
+          )}
         </main>
       </div>
 
