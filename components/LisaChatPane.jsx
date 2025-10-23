@@ -101,6 +101,7 @@ const LisaChatPane = forwardRef(function LisaChatPane(
   const tags = ["Document Q&A", "Source Citations", "Multi-Document Search", "HIPAA Compliant"]
   const messages = Array.isArray(conversation.messages) ? conversation.messages : []
   const count = messages.length || conversation.messageCount || 0
+  const hasDocuments = documents.length > 0
 
   function startEdit(m) {
     setEditingId(m.id)
@@ -145,63 +146,116 @@ const LisaChatPane = forwardRef(function LisaChatPane(
           ))}
         </div>
 
-        {/* Document Section */}
-        <div className="mb-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 overflow-hidden">
-          {/* Document Section Header */}
-          <button
-            onClick={() => setIsDocumentSectionCollapsed(!isDocumentSectionCollapsed)}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                📚 Documents
-              </span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                ({documents.length})
-              </span>
-            </div>
-            {isDocumentSectionCollapsed ? (
-              <ChevronDown className="h-4 w-4 text-zinc-500" />
-            ) : (
-              <ChevronUp className="h-4 w-4 text-zinc-500" />
-            )}
-          </button>
+        {/* INITIAL STATE: No documents - Prominent upload UI */}
+        {!hasDocuments && messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4">
+            <div className="max-w-xl w-full space-y-6">
+              {/* Header */}
+              <div className="text-center space-y-2">
+                <div className="text-6xl mb-4">📚</div>
+                <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+                  Upload Documents to Get Started
+                </h2>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  LISA helps you find information within your documents with accurate source citations.
+                  Upload PDF, DOCX, or TXT files to begin.
+                </p>
+              </div>
 
-          {/* Document Section Content */}
-          {!isDocumentSectionCollapsed && (
-            <div className="px-4 pb-4 space-y-4">
-              {/* Document Upload */}
+              {/* Prominent Document Upload */}
               <DocumentUpload
                 conversationId={conversation.id}
                 onUploadComplete={handleUploadComplete}
               />
 
-              {/* Document List */}
-              {isLoadingDocuments ? (
-                <div className="text-center py-8">
+              {/* Loading state */}
+              {isLoadingDocuments && (
+                <div className="text-center py-4">
                   <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">Loading documents...</p>
                 </div>
-              ) : (
-                <DocumentList
-                  documents={documents}
-                  onDelete={handleDocumentDelete}
-                />
               )}
-            </div>
-          )}
-        </div>
 
-        {/* Messages */}
-        {messages.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            <p className="mb-2">👋 Hi! I'm LISA, your document assistant.</p>
-            <p className="mb-4">Upload documents above and I'll help you find information within them with accurate source citations.</p>
-            <p className="text-xs text-zinc-400">Supported formats: PDF, DOCX, TXT (max 10MB each)</p>
+              {/* Features */}
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <div className="text-sm">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 mb-1">✓ Multi-Document Search</div>
+                  <div className="text-zinc-600 dark:text-zinc-400 text-xs">Upload multiple files and search across all of them</div>
+                </div>
+                <div className="text-sm">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 mb-1">✓ Source Citations</div>
+                  <div className="text-zinc-600 dark:text-zinc-400 text-xs">Every answer includes references to source documents</div>
+                </div>
+                <div className="text-sm">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 mb-1">✓ HIPAA Compliant</div>
+                  <div className="text-zinc-600 dark:text-zinc-400 text-xs">Your documents are processed securely</div>
+                </div>
+                <div className="text-sm">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 mb-1">✓ Accurate Answers</div>
+                  <div className="text-zinc-600 dark:text-zinc-400 text-xs">AI-powered responses based only on your content</div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <>
-            {messages.map((m) => (
+            {/* Document Section - Collapsible when docs exist */}
+            <div className="mb-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 overflow-hidden">
+              {/* Document Section Header */}
+              <button
+                onClick={() => setIsDocumentSectionCollapsed(!isDocumentSectionCollapsed)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    📚 Documents
+                  </span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                    ({documents.length})
+                  </span>
+                </div>
+                {isDocumentSectionCollapsed ? (
+                  <ChevronDown className="h-4 w-4 text-zinc-500" />
+                ) : (
+                  <ChevronUp className="h-4 w-4 text-zinc-500" />
+                )}
+              </button>
+
+              {/* Document Section Content */}
+              {!isDocumentSectionCollapsed && (
+                <div className="px-4 pb-4 space-y-4">
+                  {/* Document Upload */}
+                  <DocumentUpload
+                    conversationId={conversation.id}
+                    onUploadComplete={handleUploadComplete}
+                  />
+
+                  {/* Document List */}
+                  {isLoadingDocuments ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">Loading documents...</p>
+                    </div>
+                  ) : (
+                    <DocumentList
+                      documents={documents}
+                      onDelete={handleDocumentDelete}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Messages */}
+            {messages.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-zinc-300 p-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                <p className="mb-2">👋 Hi! I'm LISA, your document assistant.</p>
+                <p className="mb-4">I can see you've uploaded {documents.length} {documents.length === 1 ? 'document' : 'documents'}. Ask me anything about {documents.length === 1 ? 'it' : 'them'}!</p>
+                <p className="text-xs text-zinc-400">I'll provide accurate answers with source citations.</p>
+              </div>
+            ) : (
+              <>
+                {messages.map((m) => (
               <div key={m.id} className="space-y-2">
                 {editingId === m.id ? (
                   <div className={cls("rounded-2xl border p-2", "border-zinc-200 dark:border-zinc-800")}>
@@ -257,8 +311,10 @@ const LisaChatPane = forwardRef(function LisaChatPane(
                   </Message>
                 )}
               </div>
-            ))}
-            {isThinking && <ThinkingMessage onPause={onPauseThinking} />}
+                ))}
+                {isThinking && <ThinkingMessage onPause={onPauseThinking} />}
+              </>
+            )}
           </>
         )}
       </div>
@@ -267,12 +323,13 @@ const LisaChatPane = forwardRef(function LisaChatPane(
         ref={composerRef}
         onSend={async (text) => {
           if (!text.trim()) return
+          if (!hasDocuments) return // Don't allow sending without documents
           setBusy(true)
           await onSend?.(text)
           setBusy(false)
         }}
-        busy={busy}
-        placeholder={documents.length > 0 ? "Ask about your documents..." : "Upload documents to get started..."}
+        busy={busy || !hasDocuments} // Disable when no documents
+        placeholder={hasDocuments ? "Ask about your documents..." : "Upload documents to get started..."}
       />
     </div>
   )
