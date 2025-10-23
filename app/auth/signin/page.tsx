@@ -4,32 +4,48 @@
  */
 
 import { signIn } from "@/auth"
-import WarpBackground from "@/components/WarpBackground"
-
-// Force dynamic rendering to ensure images load correctly
-export const dynamic = 'force-dynamic'
+import { Warp } from "@paper-design/shaders-react"
+import Image from "next/image"
 
 export default function SignIn() {
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* Animated Background */}
-      <WarpBackground />
+    <main className="relative min-h-screen overflow-hidden">
+      {/* Background shader - exact copy from reference */}
+      <div className="absolute inset-0">
+        <Warp
+          style={{ height: "100%", width: "100%" }}
+          proportion={0.45}
+          softness={1}
+          distortion={0.25}
+          swirl={0.8}
+          swirlIterations={10}
+          shape="checks"
+          shapeScale={0.1}
+          scale={1}
+          rotation={0}
+          speed={1}
+          colors={["hsl(210, 100%, 20%)", "hsl(200, 100%, 75%)", "hsl(220, 90%, 30%)", "hsl(190, 100%, 80%)"]}
+        />
+      </div>
 
-      {/* Content Container */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-start px-8 pt-16 md:pt-24">
-        {/* Logo at top */}
-        <div className="mb-12 flex flex-col items-center justify-center text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-wide drop-shadow-2xl">
-            THE FAMILY
-          </h1>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-wide drop-shadow-2xl">
-            CONNECTION
-          </h1>
-        </div>
+      {/* Content - exact structure from reference */}
+      <div className="relative z-10 min-h-screen flex items-start justify-center px-8 pt-16 md:pt-24">
+        <div className="max-w-2xl w-full text-center space-y-8">
+          {/* Logo - exact copy from reference */}
+          <div className="flex justify-center">
+            <Image
+              src="/images/logo-white.png"
+              alt="Logo"
+              width={400}
+              height={150}
+              className="w-auto h-24 md:h-32"
+              priority
+            />
+          </div>
 
-        {/* Glassmorphic Card */}
-        <div className="w-full max-w-md rounded-2xl backdrop-blur-xl bg-white/10 p-8 shadow-2xl border border-white/20">
-          <div className="text-center">
+          {/* Glassmorphic Card with signin functionality */}
+          <div className="w-full max-w-md mx-auto rounded-2xl backdrop-blur-xl bg-white/10 p-8 shadow-2xl border border-white/20">
+            <div className="text-center">
             {/* Organization */}
             <div className="mb-8">
               <p className="text-lg font-semibold text-white">
@@ -69,9 +85,10 @@ export default function SignIn() {
           <p className="mt-6 text-xs text-white/70">
             For authorized staff only
           </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
