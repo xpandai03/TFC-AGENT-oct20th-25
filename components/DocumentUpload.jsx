@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react"
 import { Upload, FileText, X } from "lucide-react"
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const ALLOWED_FILE_TYPES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
 const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt']
 
@@ -18,7 +18,7 @@ export default function DocumentUpload({ conversationId, onUploadComplete }) {
   const validateFile = (file) => {
     // Check file size
     if (file.size > MAX_FILE_SIZE) {
-      return `File size exceeds 10MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`
+      return `File size exceeds 50MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`
     }
 
     // Check file type

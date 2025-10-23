@@ -6,7 +6,7 @@ import { chunkText } from '@/lib/services/text-chunker'
 import { generateEmbeddingsBatch } from '@/lib/services/embedding'
 import { storeDocumentChunks, updateDocumentStatus } from '@/lib/services/vector-store'
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: `File size exceeds 10MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)` },
+        { error: `File size exceeds 50MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)` },
         { status: 400 }
       )
     }
