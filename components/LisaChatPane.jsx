@@ -7,6 +7,7 @@ import Composer from "./Composer"
 import WelcomeAnimation from "./WelcomeAnimation"
 import DocumentUpload from "./DocumentUpload"
 import DocumentList from "./DocumentList"
+import Citation from "./Citation"
 import { cls, timeAgo } from "./utils"
 
 function ThinkingMessage({ onPause }) {
@@ -234,6 +235,12 @@ const LisaChatPane = forwardRef(function LisaChatPane(
                 ) : (
                   <Message role={m.role}>
                     <div className="whitespace-pre-wrap">{m.content}</div>
+
+                    {/* Display citations for assistant messages with sources */}
+                    {m.role === "assistant" && m.sources && m.sources.length > 0 && (
+                      <Citation sources={m.sources} />
+                    )}
+
                     {m.role === "user" && (
                       <div className="mt-1 flex gap-2 text-[11px] text-zinc-500">
                         <button className="inline-flex items-center gap-1 hover:underline" onClick={() => startEdit(m)}>

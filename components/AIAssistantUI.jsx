@@ -250,7 +250,7 @@ export default function AIAssistantUI() {
       const data = await response.json()
       console.log(`✅ Loaded ${data.messages.length} messages for conversation ${conversationId}:`, data.messages)
 
-      // Parse Excel preview messages
+      // Parse special message types from metadata
       const parsedMessages = data.messages.map((msg) => {
         // Check if this is an Excel preview message
         if (msg.metadata?.type === 'excel_preview') {
@@ -263,6 +263,15 @@ export default function AIAssistantUI() {
             }
           }
         }
+
+        // Check if this message has source citations (LISA responses)
+        if (msg.metadata?.sources) {
+          return {
+            ...msg,
+            sources: msg.metadata.sources,
+          }
+        }
+
         return msg
       })
 
@@ -565,18 +574,25 @@ export default function AIAssistantUI() {
 
           console.log('📝 Received chunk:', chunk.substring(0, 50) + (chunk.length > 50 ? '...' : ''))
 
+          // Parse out sources metadata if present (LISA responses)
+          let displayText = accumulatedText
+          if (accumulatedText.includes('__SOURCES__')) {
+            const parts = accumulatedText.split('\n\n__SOURCES__\n')
+            displayText = parts[0]
+          }
+
           // Update the assistant message with accumulated text immediately
           setConversations((prev) =>
             prev.map((c) => {
               if (c.id !== currentConvId) return c
               const msgs = c.messages.map((m) =>
-                m.id === assistantMsgId ? { ...m, content: accumulatedText } : m
+                m.id === assistantMsgId ? { ...m, content: displayText } : m
               )
               return {
                 ...c,
                 messages: msgs,
                 updatedAt: new Date().toISOString(),
-                preview: accumulatedText.slice(0, 80),
+                preview: displayText.slice(0, 80),
               }
             }),
           )
@@ -588,7 +604,39 @@ export default function AIAssistantUI() {
         reader.releaseLock()
       }
 
-      console.log('✅ DAWN response complete')
+      console.log(`✅ ${agentType.toUpperCase()} response complete`)
+
+      // Parse sources metadata if present (for LISA responses)
+      let finalText = accumulatedText
+      let sources = null
+
+      if (accumulatedText.includes('__SOURCES__')) {
+        console.log('📎 Parsing source citations from response...')
+        const parts = accumulatedText.split('\n\n__SOURCES__\n')
+        finalText = parts[0]
+
+        if (parts[1]) {
+          try {
+            sources = JSON.parse(parts[1])
+            console.log(`✅ Parsed ${sources.length} source citations`)
+          } catch (e) {
+            console.error('❌ Failed to parse sources:', e)
+          }
+        }
+      }
+
+      // Update final message with sources if present
+      if (sources && sources.length > 0) {
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id !== currentConvId) return c
+            const msgs = c.messages.map((m) =>
+              m.id === assistantMsgId ? { ...m, content: finalText, sources } : m
+            )
+            return { ...c, messages: msgs }
+          }),
+        )
+      }
 
       // STEP 3: Save assistant message to database
       console.log('💾 Saving assistant message to database...')
@@ -597,7 +645,8 @@ export default function AIAssistantUI() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           role: 'assistant',
-          content: accumulatedText,
+          content: finalText,
+          metadata: sources ? { sources } : undefined,
         }),
       })
       console.log('✅ Assistant message saved')

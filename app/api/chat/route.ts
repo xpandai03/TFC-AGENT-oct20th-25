@@ -6,6 +6,7 @@ import { tools } from '@/lib/tools/definitions'
 import { handleToolCall } from '@/lib/agent/tool-handler'
 import { DAWN_SYSTEM_PROMPT } from '@/lib/agent/prompts'
 import { LISA_SYSTEM_PROMPT } from '@/lib/agent/lisa-prompts'
+import { buildRAGContext, formatRAGSystemPrompt } from '@/lib/services/rag-context-builder'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 
 export async function POST(request: Request) {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
 }
 
 /**
- * Handle LISA (document Q&A) chat requests
+ * Handle LISA (document Q&A) chat requests with RAG retrieval
  */
 async function handleLisaChat(
   message: string,
@@ -69,39 +70,81 @@ async function handleLisaChat(
   userEmail: string
 ) {
   console.log('📚 LISA chat handler called')
+  console.log(`💬 User query: "${message.substring(0, 100)}..."`)
 
-  // Build messages array with LISA system prompt
+  // Step 1: Build RAG context from uploaded documents
+  let ragContext
+  try {
+    ragContext = await buildRAGContext(message, conversationId, 5)
+
+    if (ragContext.hasContext) {
+      console.log(`✅ Retrieved ${ragContext.sources.length} relevant document chunks`)
+      ragContext.sources.forEach((source, i) => {
+        console.log(`  📄 ${i + 1}. ${source.documentName} (${(source.similarity * 100).toFixed(1)}% match)`)
+      })
+    } else {
+      console.log('⚠️ No documents found - will prompt user to upload')
+    }
+  } catch (error) {
+    console.error('❌ Error building RAG context:', error)
+    // Continue without context - LISA will inform user
+    ragContext = { context: '', sources: [], hasContext: false }
+  }
+
+  // Step 2: Build enhanced system prompt with RAG context
+  const ragInstructions = formatRAGSystemPrompt(ragContext.context)
+  const enhancedSystemPrompt = `${LISA_SYSTEM_PROMPT}
+
+---
+
+RETRIEVED CONTEXT:
+${ragInstructions}`
+
+  console.log(`📏 System prompt length: ${enhancedSystemPrompt.length} characters`)
+
+  // Step 3: Build messages array with enhanced prompt
   const messages: ChatCompletionMessageParam[] = [
-    { role: 'system', content: LISA_SYSTEM_PROMPT },
+    { role: 'system', content: enhancedSystemPrompt },
     ...(history || []),
     { role: 'user', content: message }
   ]
 
   console.log('📝 Total messages being sent to AI:', messages.length)
 
-  // For now, LISA responds without RAG (document upload not implemented yet)
-  // TODO: Phase 4 & 5 - Add document retrieval and RAG context building
+  // Step 4: Generate response using Azure OpenAI
   const response = await openai.chat.completions.create({
     model: deploymentName,
     messages: messages,
     temperature: 0.7,
+    max_tokens: 1500,
     // LISA doesn't use tools - it's purely conversational with RAG context
   })
 
   const assistantMessage = response.choices[0].message
   const textContent = assistantMessage.content || 'I apologize, but I was unable to generate a response.'
 
-  console.log('✅ LISA response ready, streaming to client')
+  console.log('✅ LISA response generated')
+  console.log(`📏 Response length: ${textContent.length} characters`)
 
-  // Stream the response
+  // Step 5: Stream the response with source metadata
   const stream = new ReadableStream({
     async start(controller) {
       try {
         const encoder = new TextEncoder()
+
+        // Stream the text response
         for (const char of textContent) {
           controller.enqueue(encoder.encode(char))
           await new Promise(resolve => setTimeout(resolve, 10))
         }
+
+        // If we have sources, append them as metadata (client will parse)
+        if (ragContext.hasContext && ragContext.sources.length > 0) {
+          console.log('📎 Appending source metadata to response')
+          const sourcesMetadata = '\n\n__SOURCES__\n' + JSON.stringify(ragContext.sources)
+          controller.enqueue(encoder.encode(sourcesMetadata))
+        }
+
         controller.close()
       } catch (error) {
         console.error('❌ Streaming error:', error)
