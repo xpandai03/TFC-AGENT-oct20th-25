@@ -48,6 +48,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Verify conversation exists and is a LISA conversation
+    console.log(`🔍 Verifying conversation: ${conversationId}`)
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+    })
+
+    if (!conversation) {
+      return NextResponse.json(
+        { error: 'Conversation not found' },
+        { status: 404 }
+      )
+    }
+
+    if (conversation.agentType !== 'lisa') {
+      return NextResponse.json(
+        { error: 'Documents can only be uploaded to LISA conversations' },
+        { status: 400 }
+      )
+    }
+
+    console.log(`✅ Conversation verified: ${conversation.agentType} agent`)
+
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
@@ -67,11 +89,14 @@ export async function POST(request: NextRequest) {
     console.log(`📄 File: ${file.name} (${file.type}, ${(file.size / 1024).toFixed(2)} KB)`)
 
     // Convert file to buffer
+    console.log('🔄 Converting file to buffer...')
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
+    console.log(`✅ Buffer created: ${buffer.length} bytes`)
 
     // Create document record in database with temporary fileUrl
     // We'll save the actual file after getting the document ID
+    console.log('🔄 Creating document record in database...')
     const document = await prisma.document.create({
       data: {
         userId: userEmail,
@@ -87,15 +112,18 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Document record created: ${document.id}`)
 
     // Save file to disk with document ID in filename
+    console.log('🔄 Saving file to disk...')
     const fileUrl = await saveFile(buffer, file.name, document.id)
+    console.log(`✅ File saved to disk: ${fileUrl}`)
 
     // Update document with actual file URL
+    console.log('🔄 Updating document record with file URL...')
     await prisma.document.update({
       where: { id: document.id },
       data: { fileUrl },
     })
 
-    console.log(`💾 File saved: ${fileUrl}`)
+    console.log(`💾 Document updated with fileUrl: ${fileUrl}`)
 
     // Process document asynchronously (don't block response)
     processDocumentAsync(document.id, buffer, file.name, file.type)
