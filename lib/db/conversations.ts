@@ -36,6 +36,7 @@ export async function getConversationsForUser(userEmail: string) {
       preview: true,
       pinned: true,
       messageCount: true,
+      agentType: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -51,6 +52,7 @@ export async function createConversation(
   userEmail: string,
   data: {
     title: string
+    agentType?: string
   }
 ) {
   // Ensure user exists
@@ -61,6 +63,7 @@ export async function createConversation(
     data: {
       userId: user.id,
       title: data.title,
+      agentType: data.agentType || 'dawn',
       preview: '', // Empty initially
       messageCount: 0,
     },
@@ -70,12 +73,13 @@ export async function createConversation(
       preview: true,
       pinned: true,
       messageCount: true,
+      agentType: true,
       createdAt: true,
       updatedAt: true,
     },
   })
 
-  console.log(`✅ Created conversation: ${conversation.id} for user: ${userEmail}`)
+  console.log(`✅ Created conversation: ${conversation.id} for agent: ${conversation.agentType} for user: ${userEmail}`)
 
   return conversation
 }

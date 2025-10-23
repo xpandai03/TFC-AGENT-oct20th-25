@@ -9,8 +9,10 @@ import GhostIconButton from "./GhostIconButton"
 import ThemeToggle from "./ThemeToggle"
 import MoveFolderModal from "./MoveFolderModal"
 import { INITIAL_CONVERSATIONS, INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData"
+import { useAgent } from "@/contexts/AgentContext"
 
 export default function AIAssistantUI() {
+  const { selectedAgent } = useAgent()
   const [theme, setTheme] = useState(() => {
     const saved = typeof window !== "undefined" && localStorage.getItem("theme")
     if (saved) return saved
@@ -270,7 +272,7 @@ export default function AIAssistantUI() {
 
   async function createNewChat() {
     try {
-      console.log('➕ Creating new conversation...')
+      console.log('➕ Creating new conversation for agent:', selectedAgent)
 
       const response = await fetch('/api/conversations', {
         method: 'POST',
@@ -279,6 +281,7 @@ export default function AIAssistantUI() {
         },
         body: JSON.stringify({
           title: 'New Chat',
+          agentType: selectedAgent,
         }),
       })
 

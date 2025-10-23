@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     // 2. Parse request body
     const body = await request.json()
-    const { title } = body
+    const { title, agentType } = body
 
     if (!title || title.trim() === '') {
       return NextResponse.json(
@@ -71,10 +71,13 @@ export async function POST(request: Request) {
       )
     }
 
-    console.log('📝 Creating conversation:', title, 'for user:', userEmail)
+    console.log('📝 Creating conversation:', title, 'for agent:', agentType || 'dawn', 'for user:', userEmail)
 
     // 3. Create conversation in database
-    const conversation = await createConversation(userEmail, { title })
+    const conversation = await createConversation(userEmail, {
+      title,
+      agentType: agentType || 'dawn'  // Default to 'dawn' if not provided
+    })
 
     console.log(`✅ Conversation created successfully: ${conversation.id}`)
 

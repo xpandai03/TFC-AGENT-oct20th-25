@@ -32,6 +32,7 @@ model Conversation {
   preview      String?
   pinned       Boolean   @default(false)
   messageCount Int       @default(0) @map("message_count")
+  agentType    String    @default("dawn") @map("agent_type") // Agent type: 'dawn' or 'lisa'
   messages     Message[] // Relation to messages
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
@@ -39,6 +40,7 @@ model Conversation {
 
   @@index([userId, updatedAt(sort: Desc)])
   @@index([deletedAt])
+  @@index([agentType])
   @@map("conversations")
 }
 

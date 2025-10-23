@@ -1,7 +1,7 @@
 "use client"
-import { Asterisk, MoreHorizontal, Menu, ChevronDown, FolderIcon } from "lucide-react"
+import { MoreHorizontal, Menu, ChevronDown, FolderIcon } from "lucide-react"
 import { useState } from "react"
-import GhostIconButton from "./GhostIconButton"
+import { useAgent } from "@/contexts/AgentContext"
 
 export default function Header({
   createNewChat,
@@ -10,32 +10,26 @@ export default function Header({
   currentConversationId,
   onMoveToFolder
 }) {
-  const [selectedBot, setSelectedBot] = useState("D.A.W.N")
+  const { selectedAgent, setSelectedAgent, agentConfig } = useAgent()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
 
-  const chatbots = [
+  const agents = [
     {
-      name: "D.A.W.N",
-      icon: "🤖",
-      description: "Dependable Agent Working Nicely - A friendly agent designed to assist the admin team manage tasks."
+      id: "dawn",
+      name: agentConfig.dawn.name,
+      icon: agentConfig.dawn.icon,
+      description: agentConfig.dawn.description
     },
     {
-      name: "Lisa",
-      icon: "🎭",
-      description: "Specialized mental health support agent with empathetic conversation capabilities."
-    },
-    {
-      name: "Secret Agent #1",
-      icon: "💎",
-      description: "Advanced AI assistant for complex administrative and support tasks."
-    },
-    {
-      name: "Secret Agent #2",
-      icon: <Asterisk className="h-4 w-4" />,
-      description: "Auxiliary support agent for specialized queries and assistance."
+      id: "lisa",
+      name: agentConfig.lisa.name,
+      icon: agentConfig.lisa.icon,
+      description: agentConfig.lisa.description
     },
   ]
+
+  const currentAgent = agents.find(a => a.id === selectedAgent) || agents[0]
 
   return (
     <div className="sticky top-0 z-30 border-b border-zinc-200/60 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/70">
@@ -55,28 +49,26 @@ export default function Header({
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold tracking-tight hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-800"
           >
-            {typeof chatbots.find((bot) => bot.name === selectedBot)?.icon === "string" ? (
-              <span className="text-sm">{chatbots.find((bot) => bot.name === selectedBot)?.icon}</span>
-            ) : (
-              chatbots.find((bot) => bot.name === selectedBot)?.icon
-            )}
-            {selectedBot}
+            <span className="text-sm">{currentAgent.icon}</span>
+            {currentAgent.name}
             <ChevronDown className="h-4 w-4" />
           </button>
 
           {isDropdownOpen && (
             <div className="absolute top-full left-0 mt-1 w-48 rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950 z-50">
-              {chatbots.map((bot) => (
+              {agents.map((agent) => (
                 <button
-                  key={bot.name}
+                  key={agent.id}
                   onClick={() => {
-                    setSelectedBot(bot.name)
+                    setSelectedAgent(agent.id)
                     setIsDropdownOpen(false)
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 first:rounded-t-lg last:rounded-b-lg"
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 first:rounded-t-lg last:rounded-b-lg ${
+                    selectedAgent === agent.id ? 'bg-zinc-100 dark:bg-zinc-800' : ''
+                  }`}
                 >
-                  {typeof bot.icon === "string" ? <span className="text-sm">{bot.icon}</span> : bot.icon}
-                  {bot.name}
+                  <span className="text-sm">{agent.icon}</span>
+                  {agent.name}
                 </button>
               ))}
             </div>
@@ -132,7 +124,7 @@ export default function Header({
       {/* Agent Description - Below Agent Selector */}
       <div className="hidden md:block px-4 pb-2">
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          {chatbots.find((bot) => bot.name === selectedBot)?.description}
+          {currentAgent.description}
         </p>
       </div>
     </div>
