@@ -15,6 +15,7 @@
     "@ai-sdk/azure": "^2.0.53",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
+    "@paper-design/shaders-react": "^0.0.60",
     "@prisma/client": "^6.18.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",

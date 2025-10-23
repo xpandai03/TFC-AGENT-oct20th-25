@@ -4,12 +4,16 @@
  */
 
 import { signIn } from "@/auth"
+import WarpBackground from "@/components/WarpBackground"
 
 export default function SignIn() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-400 via-pink-300 to-blue-300">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
+      {/* Animated Background */}
+      <WarpBackground />
+
       {/* Glassmorphic Card */}
-      <div className="w-full max-w-md rounded-2xl backdrop-blur-xl bg-white/10 p-8 shadow-2xl border border-white/20">
+      <div className="relative z-10 w-full max-w-md rounded-2xl backdrop-blur-xl bg-white/10 p-8 shadow-2xl border border-white/20">
         <div className="text-center">
           {/* Logo/Branding */}
           <div className="mb-6">
