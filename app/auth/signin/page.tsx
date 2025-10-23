@@ -6,6 +6,9 @@
 import { signIn } from "@/auth"
 import WarpBackground from "@/components/WarpBackground"
 
+// Force dynamic rendering to ensure images load correctly
+export const dynamic = 'force-dynamic'
+
 export default function SignIn() {
   return (
     <div className="relative min-h-screen overflow-hidden">
