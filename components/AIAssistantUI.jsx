@@ -141,6 +141,17 @@ export default function AIAssistantUI() {
     }
   }, [])
 
+  // Auto-create new conversation when agent switches
+  useEffect(() => {
+    const currentConversation = conversations.find(c => c.id === selectedId)
+
+    // If we have a selected conversation and the agent doesn't match, create new chat
+    if (currentConversation && currentConversation.agentType !== selectedAgent) {
+      console.log(`🔄 Agent switched from ${currentConversation.agentType} to ${selectedAgent}, creating new conversation`)
+      createNewChat()
+    }
+  }, [selectedAgent])
+
   const filtered = useMemo(() => {
     if (!query.trim()) return conversations
     const q = query.toLowerCase()
@@ -390,7 +401,9 @@ export default function AIAssistantUI() {
         console.log('✅ Conversation title updated in database:', newTitle)
       }
 
-      console.log('💬 Sending message to DAWN:', content)
+      // Get agent type from current conversation
+      const agentType = currentConversation?.agentType || 'dawn'
+      console.log(`💬 Sending message to ${agentType.toUpperCase()}:`, content)
       console.log('📝 With conversation history:', historyForAPI.length, 'previous messages')
 
       const response = await fetch('/api/chat', {
@@ -400,7 +413,9 @@ export default function AIAssistantUI() {
         },
         body: JSON.stringify({
           message: content,
-          history: historyForAPI
+          history: historyForAPI,
+          agentType: agentType, // Pass agent type to API
+          conversationId: convId // Pass conversation ID for LISA document lookup
         }),
       })
 
