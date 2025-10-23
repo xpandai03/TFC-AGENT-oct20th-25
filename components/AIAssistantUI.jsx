@@ -88,7 +88,15 @@ export default function AIAssistantUI() {
 
         const data = await response.json()
         console.log('📂 Loaded conversations from API:', data.conversations.length)
-        setConversations(data.conversations)
+
+        // Initialize each conversation with an empty messages array
+        // Messages will be loaded on-demand when conversation is selected
+        const conversationsWithMessages = data.conversations.map(conv => ({
+          ...conv,
+          messages: [] // Initialize empty - will be populated when selected
+        }))
+
+        setConversations(conversationsWithMessages)
       } catch (error) {
         console.error('❌ Failed to load conversations:', error)
         // Keep empty array on error
@@ -221,20 +229,24 @@ export default function AIAssistantUI() {
 
       const response = await fetch(`/api/conversations/${conversationId}/messages`)
       if (!response.ok) {
+        console.error(`❌ Failed to fetch messages: HTTP ${response.status}`)
         throw new Error(`Failed to fetch messages: ${response.status}`)
       }
 
       const data = await response.json()
-      console.log(`✅ Loaded ${data.messages.length} messages`)
+      console.log(`✅ Loaded ${data.messages.length} messages for conversation ${conversationId}:`, data.messages)
 
       // Update conversation's messages in state
-      setConversations((prev) =>
-        prev.map((c) =>
+      setConversations((prev) => {
+        const updated = prev.map((c) =>
           c.id === conversationId
             ? { ...c, messages: data.messages }
             : c
         )
-      )
+        console.log('📝 Updated conversations state. Conversation now has:',
+          updated.find(c => c.id === conversationId)?.messages?.length, 'messages')
+        return updated
+      })
     } catch (error) {
       console.error('❌ Failed to load messages:', error)
     }
