@@ -19,6 +19,8 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  // Externalize CommonJS modules that don't bundle well
+  serverExternalPackages: ['pdf-parse'],
 }
 
 export default nextConfig
