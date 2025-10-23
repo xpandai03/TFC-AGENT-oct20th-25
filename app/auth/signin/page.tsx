@@ -8,31 +8,33 @@ import WarpBackground from "@/components/WarpBackground"
 
 export default function SignIn() {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
       {/* Animated Background */}
       <WarpBackground />
 
-      {/* Glassmorphic Card */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl backdrop-blur-xl bg-white/10 p-8 shadow-2xl border border-white/20">
-        <div className="text-center">
-          {/* Logo/Branding */}
-          <div className="mb-6 flex justify-center">
-            <img
-              src="/images/tfc-logo-white.png"
-              alt="The Family Connection Logo"
-              className="w-auto h-24 md:h-32 drop-shadow-2xl"
-            />
-          </div>
+      {/* Content Container */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-start px-8 pt-16 md:pt-24">
+        {/* Logo at top */}
+        <div className="mb-12 flex justify-center">
+          <img
+            src="/images/tfc-logo-white.png"
+            alt="The Family Connection Logo"
+            className="w-auto h-24 md:h-32 drop-shadow-2xl"
+          />
+        </div>
 
-          {/* Organization */}
-          <div className="mb-8">
-            <p className="text-lg font-semibold text-white">
-              The Family Connection
-            </p>
-            <p className="mt-1 text-sm text-white/80">
-              Admin Support AI Assistant
-            </p>
-          </div>
+        {/* Glassmorphic Card */}
+        <div className="w-full max-w-md rounded-2xl backdrop-blur-xl bg-white/10 p-8 shadow-2xl border border-white/20">
+          <div className="text-center">
+            {/* Organization */}
+            <div className="mb-8">
+              <p className="text-lg font-semibold text-white">
+                The Family Connection
+              </p>
+              <p className="mt-1 text-sm text-white/80">
+                Admin Support AI Assistant
+              </p>
+            </div>
 
           {/* Sign In Button */}
           <form
@@ -63,6 +65,7 @@ export default function SignIn() {
           <p className="mt-6 text-xs text-white/70">
             For authorized staff only
           </p>
+          </div>
         </div>
       </div>
     </div>
