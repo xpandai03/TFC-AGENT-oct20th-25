@@ -59,12 +59,13 @@ export default function Sidebar({
   const [showSearchModal, setShowSearchModal] = useState(false)
 
   // Get user session data
-  const { data: session } = useSession()
+  const { data: session } = useSession() || {}
   const userName = session?.user?.name || 'User'
   const userEmail = session?.user?.email || 'Not signed in'
-  const userInitials = userName
+  const userInitials = (userName || 'U')
     .split(' ')
-    .map(n => n[0])
+    .map(n => n?.[0])
+    .filter(Boolean)
     .join('')
     .toUpperCase()
     .slice(0, 2) || 'U'

@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 export default function SettingsPopover({ children }) {
   const [open, setOpen] = useState(false)
-  const { data: session } = useSession()
+  const { data: session } = useSession() || {}
 
   // Get user data from session
   const userName = session?.user?.name || 'User'
