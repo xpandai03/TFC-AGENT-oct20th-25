@@ -56,3 +56,43 @@ model Message {
   @@index([conversationId, createdAt(sort: Asc)])
   @@map("messages")
 }
+
+// Document model - stores uploaded documents for LISA
+model Document {
+  id               String          @id @default(uuid())
+  userId           String          @map("user_id")
+  conversationId   String          @map("conversation_id")
+  fileName         String          @map("file_name")
+  fileType         String          @map("file_type")
+  fileSize         Int             @map("file_size")
+  fileUrl          String          @map("file_url") @db.Text
+  processingStatus String          @default("pending") @map("processing_status") // pending, processing, completed, failed
+  pageCount        Int?            @map("page_count")
+  chunkCount       Int?            @map("chunk_count")
+  metadata         Json?
+  chunks           DocumentChunk[] // Relation to chunks
+  createdAt        DateTime        @default(now()) @map("created_at")
+  deletedAt        DateTime?       @map("deleted_at") // Soft delete for HIPAA compliance
+
+  @@index([userId])
+  @@index([conversationId])
+  @@index([deletedAt])
+  @@map("documents")
+}
+
+// DocumentChunk model - stores vectorized document chunks for RAG
+// Note: We use Unsupported type for pgvector's vector type since Prisma doesn't have native support yet
+model DocumentChunk {
+  id         String    @id @default(uuid())
+  documentId String    @map("document_id")
+  document   Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  chunkIndex Int       @map("chunk_index")
+  content    String    @db.Text
+  pageNumber Int?      @map("page_number")
+  embedding  Unsupported("vector(3072)")? // text-embedding-3-large produces 3072 dimensions
+  metadata   Json? // stores: char_count, token_count, position, etc.
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([documentId])
+  @@map("document_chunks")
+}
