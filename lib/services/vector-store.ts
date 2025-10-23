@@ -4,6 +4,7 @@
  */
 
 import { Client } from 'pg'
+import crypto from 'crypto'
 import type { TextChunk } from './text-chunker'
 import type { EmbeddingResult } from './embedding'
 
@@ -59,20 +60,25 @@ export async function storeDocumentChunks(
         continue
       }
 
+      // Generate UUID for chunk
+      const chunkId = crypto.randomUUID()
+
       // Convert embedding array to pgvector format
       const embeddingVector = `[${embeddingData.embedding.join(',')}]`
 
       const query = `
         INSERT INTO document_chunks (
+          id,
           document_id,
           content,
           chunk_index,
           embedding,
           metadata
-        ) VALUES ($1, $2, $3, $4, $5)
+        ) VALUES ($1, $2, $3, $4, $5, $6)
       `
 
       const values = [
+        chunkId,
         documentId,
         chunk.content,
         chunk.index,
