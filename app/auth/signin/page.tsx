@@ -5,6 +5,7 @@
 
 import { signIn } from "@/auth"
 import WarpBackground from "@/components/WarpBackground"
+import Image from "next/image"
 
 export default function SignIn() {
   return (
@@ -16,11 +17,15 @@ export default function SignIn() {
       <div className="relative z-10 w-full max-w-md rounded-2xl backdrop-blur-xl bg-white/10 p-8 shadow-2xl border border-white/20">
         <div className="text-center">
           {/* Logo/Branding */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white drop-shadow-lg">TFC Agent Space</h1>
-            <p className="mt-2 text-sm text-white/90">
-              Powered by D.A.W.N.
-            </p>
+          <div className="mb-6 flex justify-center">
+            <Image
+              src="/images/tfc-logo-white.png"
+              alt="The Family Connection Logo"
+              width={300}
+              height={120}
+              className="w-auto h-24 drop-shadow-2xl"
+              priority
+            />
           </div>
 
           {/* Organization */}
