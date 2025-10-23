@@ -147,10 +147,15 @@ export async function POST(request: Request) {
           logToolCall(userEmail, toolCall.function.name, args, result)
 
           // Add tool result to messages
+          // For showExcelPreview, exclude data to prevent AI from echoing back JSON
+          const toolResult = toolCall.function.name === 'showExcelPreview'
+            ? { success: result.success, message: result.message }
+            : result
+
           currentMessages.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: JSON.stringify(result)
+            content: JSON.stringify(toolResult)
           })
         } catch (error) {
           console.error(`  ❌ Tool execution error:`, error)

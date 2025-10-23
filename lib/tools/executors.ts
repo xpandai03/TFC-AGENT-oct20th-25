@@ -165,11 +165,11 @@ export async function executeShowExcelPreview(params: ShowExcelPreviewParams) {
 
     return {
       success: true,
-      message: `Showing Excel spreadsheet preview - ${params.reason}`,
+      message: `Excel spreadsheet preview is being displayed.`,
       data: {
         embedUrl,
         reason: params.reason,
-        type: 'excel_preview', // Special flag for frontend
+        type: 'excel_preview', // Special flag for frontend - captured separately in route.ts
       },
     }
   } catch (error) {

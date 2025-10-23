@@ -236,11 +236,27 @@ export default function AIAssistantUI() {
       const data = await response.json()
       console.log(`✅ Loaded ${data.messages.length} messages for conversation ${conversationId}:`, data.messages)
 
+      // Parse Excel preview messages
+      const parsedMessages = data.messages.map((msg) => {
+        // Check if this is an Excel preview message
+        if (msg.metadata?.type === 'excel_preview') {
+          return {
+            ...msg,
+            type: 'excel_preview',
+            excelPreview: {
+              embedUrl: msg.metadata.embedUrl,
+              reason: msg.metadata.reason,
+            }
+          }
+        }
+        return msg
+      })
+
       // Update conversation's messages in state
       setConversations((prev) => {
         const updated = prev.map((c) =>
           c.id === conversationId
-            ? { ...c, messages: data.messages }
+            ? { ...c, messages: parsedMessages }
             : c
         )
         console.log('📝 Updated conversations state. Conversation now has:',
@@ -453,6 +469,28 @@ export default function AIAssistantUI() {
             content: data.text,
           }),
         })
+
+        // Save Excel preview message to database if present
+        if (data.excelPreview) {
+          console.log('💾 Saving Excel preview message to database...')
+          await fetch(`/api/conversations/${convId}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              role: 'assistant',
+              content: JSON.stringify({
+                type: 'excel_preview',
+                excelPreview: data.excelPreview,
+              }),
+              metadata: {
+                type: 'excel_preview',
+                embedUrl: data.excelPreview.embedUrl,
+                reason: data.excelPreview.reason,
+              }
+            }),
+          })
+          console.log('✅ Excel preview message saved to database')
+        }
 
         return
       }
