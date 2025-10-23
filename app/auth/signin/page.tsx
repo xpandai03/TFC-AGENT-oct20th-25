@@ -18,12 +18,13 @@ export default function SignIn() {
       {/* Content Container */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-start px-8 pt-16 md:pt-24">
         {/* Logo at top */}
-        <div className="mb-12 flex justify-center">
-          <img
-            src="/images/tfc-logo-dark.png"
-            alt="The Family Connection Logo"
-            className="h-20 md:h-24 w-auto object-contain drop-shadow-2xl"
-          />
+        <div className="mb-12 flex flex-col items-center justify-center text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-wide drop-shadow-2xl">
+            THE FAMILY
+          </h1>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-wide drop-shadow-2xl">
+            CONNECTION
+          </h1>
         </div>
 
         {/* Glassmorphic Card */}
