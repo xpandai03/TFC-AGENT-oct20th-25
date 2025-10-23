@@ -340,6 +340,22 @@ export default function AIAssistantUI() {
       })
       console.log('✅ User message saved')
 
+      // STEP 1.5: If this is the first message, update the conversation title in database
+      const isFirstMessage = conversationHistory.length === 0
+      if (isFirstMessage) {
+        console.log('🏷️ Updating conversation title for first message...')
+        const newTitle = content.slice(0, 50) + (content.length > 50 ? '...' : '')
+
+        await fetch(`/api/conversations/${convId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newTitle
+          }),
+        })
+        console.log('✅ Conversation title updated in database:', newTitle)
+      }
+
       console.log('💬 Sending message to DAWN:', content)
       console.log('📝 With conversation history:', historyForAPI.length, 'previous messages')
 
@@ -573,7 +589,13 @@ export default function AIAssistantUI() {
         />
 
         <main className="relative flex min-w-0 flex-1 flex-col">
-          <Header createNewChat={createNewChat} sidebarCollapsed={sidebarCollapsed} setSidebarOpen={setSidebarOpen} />
+          <Header
+            createNewChat={createNewChat}
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarOpen={setSidebarOpen}
+            currentConversationId={selectedId}
+            onMoveToFolder={handleMoveToFolder}
+          />
           <ChatPane
             ref={composerRef}
             conversation={selected}

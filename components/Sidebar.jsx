@@ -23,6 +23,7 @@ import SearchModal from "./SearchModal"
 import SettingsPopover from "./SettingsPopover"
 import { cls } from "./utils"
 import { useState } from "react"
+import { useSession } from "next-auth/react"
 
 export default function Sidebar({
   open,
@@ -56,6 +57,17 @@ export default function Sidebar({
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState(null)
   const [showSearchModal, setShowSearchModal] = useState(false)
+
+  // Get user session data
+  const { data: session } = useSession()
+  const userName = session?.user?.name || 'User'
+  const userEmail = session?.user?.email || 'Not signed in'
+  const userInitials = userName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'U'
 
   const getConversationsByFolder = (folderName) => {
     return conversations.filter((conv) => conv.folder === folderName)
@@ -394,11 +406,11 @@ export default function Sidebar({
               </div>
               <div className="mt-2 flex items-center gap-2 rounded-xl bg-zinc-50 p-2 dark:bg-zinc-800/60">
                 <div className="grid h-8 w-8 place-items-center rounded-full bg-zinc-900 text-xs font-bold text-white dark:bg-white dark:text-zinc-900">
-                  JD
+                  {userInitials}
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">John Doe</div>
-                  <div className="truncate text-xs text-zinc-500 dark:text-zinc-400">Pro workspace</div>
+                  <div className="truncate text-sm font-medium">{userName}</div>
+                  <div className="truncate text-xs text-zinc-500 dark:text-zinc-400">{userEmail}</div>
                 </div>
               </div>
             </div>

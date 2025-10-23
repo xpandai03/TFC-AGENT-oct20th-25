@@ -81,6 +81,58 @@ export async function createConversation(
 }
 
 /**
+ * Update a conversation (title, folder, etc.)
+ * Verifies ownership before updating
+ */
+export async function updateConversation(
+  userEmail: string,
+  conversationId: string,
+  data: {
+    title?: string
+    folder?: string
+  }
+) {
+  // 1. Ensure user exists
+  const user = await getOrCreateUser(userEmail)
+
+  // 2. Verify ownership
+  const conversation = await prisma.conversation.findFirst({
+    where: {
+      id: conversationId,
+      userId: user.id,
+      deletedAt: null, // Not deleted
+    },
+  })
+
+  if (!conversation) {
+    throw new Error('Conversation not found or access denied')
+  }
+
+  // 3. Update conversation
+  const updated = await prisma.conversation.update({
+    where: { id: conversationId },
+    data: {
+      ...(data.title !== undefined && { title: data.title }),
+      ...(data.folder !== undefined && { folder: data.folder }),
+      updatedAt: new Date(),
+    },
+    select: {
+      id: true,
+      title: true,
+      preview: true,
+      pinned: true,
+      messageCount: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  })
+
+  console.log(`✏️ Updated conversation: ${conversationId} for user: ${userEmail}`)
+
+  return updated
+}
+
+/**
  * Delete a conversation (soft delete)
  * Sets deletedAt timestamp instead of removing from database
  */
