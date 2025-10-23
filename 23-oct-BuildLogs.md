@@ -370,6 +370,335 @@ Database
 
 ---
 
-**Build completed at**: October 23, 2025, 1:30 AM PST
-**Status**: ✅ All fixes deployed to Render
-**Action Required**: Test latest deployment with complete user flows
+## 🚨 CRITICAL DISCOVERY - ROOT CAUSE IDENTIFIED (3:45 AM PST)
+
+### The Real Problem: Missing Database Tables + Azure Deployment
+
+After persistent upload failures, performed deep diagnostic analysis and discovered **7 CRITICAL ISSUES**:
+
+#### Issue #1: Database Tables Don't Exist ⚠️ CRITICAL
+- Only 2 migrations exist, NO migration for `documents` and `document_chunks` tables
+- Previous `prisma db push` only worked locally, Render database still has old schema
+- **Evidence**: Both GET and POST `/api/documents` returning 500 errors
+- **Why**: Routes trying to query non-existent tables
+
+#### Issue #2: Missing Azure Embedding Deployment ⚠️ CRITICAL
+- Only `gpt-4o-mini` (chat) deployment configured
+- NO `text-embedding-3-large` deployment for embeddings
+- **Why**: RAG requires separate embedding model deployment in Azure
+- **Impact**: Cannot generate vector embeddings without this
+
+#### Issue #3: Schema Mismatch - `updatedAt` Field
+- `app/api/documents/route.ts:50` tries to select non-existent `updatedAt` field
+- Document model only has `createdAt` and `deletedAt`
+- **Fixed**: Removed `updatedAt` from select statement
+
+#### Issue #4: Schema Mismatch - `char_count` Column
+- `vector-store.ts:72` tries to INSERT into non-existent `char_count` column
+- **Fixed**: Store `charCount` in metadata JSON instead
+
+#### Issue #5: Missing `search_document_chunks()` Function
+- `vector-store.ts:125` calls database function that doesn't exist
+- **Fixed**: Created function in migration
+
+#### Issue #6: pdf-parse Import Error
+- CommonJS vs ESM issue with `import pdf from 'pdf-parse'`
+- **Fixed**: Use dynamic import `(await import('pdf-parse')).default`
+
+#### Issue #7: IVFFlat Index Dimension Limit
+- IVFFlat index limited to 2000 dimensions
+- text-embedding-3-large produces 3072 dimensions
+- **Fixed**: Use HNSW index instead (supports unlimited dimensions)
+
+---
+
+## ✅ COMPREHENSIVE FIXES APPLIED (3:00 AM - 3:45 AM PST)
+
+### Fix #1: Created Complete Database Migration
+**Files**: `prisma/migrations/20251023103000_add_lisa_rag_tables/migration.sql`
+
+**Changes**:
+- Added `agent_type` column to conversations table
+- Enabled pgvector extension
+- Created `documents` table (WITHOUT updatedAt field)
+- Created `document_chunks` table with vector(3072)
+- Created `search_document_chunks()` SQL function for RAG
+- Used HNSW index (not IVFFlat) for 3072-dimension support
+
+**Key SQL**:
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE "documents" (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  file_type VARCHAR(50) NOT NULL,
+  file_size INTEGER NOT NULL,
+  file_url TEXT NOT NULL,
+  processing_status VARCHAR(50) DEFAULT 'pending',
+  page_count INTEGER,
+  chunk_count INTEGER,
+  metadata JSONB,
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP(3)
+);
+
+CREATE TABLE "document_chunks" (
+  id TEXT PRIMARY KEY,
+  document_id TEXT NOT NULL,
+  chunk_index INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  page_number INTEGER,
+  embedding vector(3072),
+  metadata JSONB,
+  created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
+);
+
+-- HNSW index for high-dimensional embeddings
+CREATE INDEX "document_chunks_embedding_idx"
+ON "document_chunks"
+USING hnsw ("embedding" vector_cosine_ops)
+WITH (m = 16, ef_construction = 64);
+
+-- RAG search function
+CREATE FUNCTION search_document_chunks(
+  query_embedding vector(3072),
+  p_conversation_id TEXT,
+  result_limit INTEGER DEFAULT 5
+)
+RETURNS TABLE (...)
+AS $$...$$;
+```
+
+---
+
+### Fix #2: Fixed Schema Mismatches
+**Files Changed**:
+- `app/api/documents/route.ts:50` - Removed non-existent `updatedAt` field
+- `lib/services/vector-store.ts:65-85` - Store `charCount` in metadata JSON
+- `lib/services/vector-store.ts:168-193` - Extract `charCount` from metadata
+
+**Before**:
+```typescript
+// ❌ Tried to select non-existent field
+select: { ..., updatedAt: true }
+
+// ❌ Tried to insert into non-existent column
+INSERT INTO document_chunks (..., char_count, ...) VALUES (...)
+```
+
+**After**:
+```typescript
+// ✅ Removed updatedAt
+select: { ..., createdAt: true }
+
+// ✅ Store in metadata JSON
+INSERT INTO document_chunks (..., metadata)
+VALUES (..., '{"charCount": 1234, ...}')
+```
+
+---
+
+### Fix #3: Fixed pdf-parse Import
+**File**: `lib/services/document-processor.ts:6-27`
+
+**Before**:
+```typescript
+import pdf from 'pdf-parse'  // ❌ CommonJS default export error
+```
+
+**After**:
+```typescript
+// Dynamic import for CommonJS module
+const pdf = (await import('pdf-parse')).default
+```
+
+**Result**: No more build warnings, clean TypeScript compilation
+
+---
+
+### Fix #4: Added Azure Embedding Support
+**Files Changed**:
+- `lib/azure-config.ts` - Added dual deployment support
+- `lib/services/embedding.ts` - Use `openaiEmbedding` client
+- `AZURE_EMBEDDING_SETUP.md` - Complete setup documentation
+
+**Architecture**:
+```typescript
+// Chat client (D.A.W.N. + LISA responses)
+export const openai = getOpenAIClient()
+// Deployment: gpt-4o-mini
+
+// Embedding client (LISA document vectorization)
+export const openaiEmbedding = getOpenAIEmbeddingClient()
+// Deployment: text-embedding-3-large
+```
+
+**Environment Variables Required**:
+```bash
+AZURE_DEPLOYMENT_NAME=gpt-4o-mini             # Existing (chat)
+AZURE_EMBEDDING_DEPLOYMENT=text-embedding-3-large  # NEW (embeddings)
+```
+
+---
+
+### Fix #5: Fixed HNSW Index Migration
+**File**: `prisma/migrations/20251023103500_fix_vector_index_hnsw/migration.sql`
+
+**Problem**: IVFFlat index limited to 2000 dimensions, build failed with:
+```
+ERROR: column cannot have more than 2000 dimensions for ivfflat index
+```
+
+**Solution**: Use HNSW index instead
+```sql
+-- Drop old IVFFlat index
+DROP INDEX IF EXISTS "document_chunks_embedding_idx";
+
+-- Create HNSW index (supports unlimited dimensions)
+CREATE INDEX "document_chunks_embedding_idx"
+ON "document_chunks"
+USING hnsw ("embedding" vector_cosine_ops)
+WITH (m = 16, ef_construction = 64);
+```
+
+**Benefits**:
+- ✅ Supports 3072-dimension embeddings
+- ✅ Faster than IVFFlat
+- ✅ Better recall for high-dimensional vectors
+
+---
+
+## 📋 Commit Summary
+
+**Total Files Changed**: 11 files
+
+### New Files:
+1. `prisma/migrations/20251023103000_add_lisa_rag_tables/migration.sql`
+2. `prisma/migrations/20251023103500_fix_vector_index_hnsw/migration.sql`
+3. `AZURE_EMBEDDING_SETUP.md`
+4. `lib/services/file-storage.ts` (from previous fix)
+
+### Modified Files:
+1. `lib/azure-config.ts` - Dual deployment support
+2. `lib/services/embedding.ts` - Use embedding client
+3. `lib/services/vector-store.ts` - Fix char_count, metadata handling
+4. `lib/services/document-processor.ts` - Fix pdf-parse import
+5. `app/api/documents/route.ts` - Remove updatedAt
+6. `app/api/documents/upload/route.ts` - File storage + validation
+7. `.gitignore` - Add /uploads
+
+---
+
+## 🚀 Deployment Checklist
+
+### Before Deployment:
+- [x] Build succeeds locally (✅ no errors, no warnings)
+- [x] All TypeScript compilation clean
+- [x] Database migration files created
+- [ ] **MANUAL**: Create Azure embedding deployment
+- [ ] **MANUAL**: Add `AZURE_EMBEDDING_DEPLOYMENT` to Render env vars
+
+### After Deployment:
+- [ ] Monitor migration logs on Render
+- [ ] Verify tables created successfully
+- [ ] Test document upload
+- [ ] Test document processing
+- [ ] Test RAG queries
+- [ ] Update this log with results
+
+---
+
+## 🎯 Next Steps (REQUIRED)
+
+### Step 1: Create Azure Embedding Deployment
+**⚠️ CRITICAL - LISA won't work without this**
+
+1. Go to: https://oai.azure.com/
+2. Navigate to "Deployments"
+3. Create new deployment:
+   - Model: `text-embedding-3-large`
+   - Name: `text-embedding-3-large`
+   - Rate limit: 120K tokens/min
+4. Copy deployment name
+
+### Step 2: Add Environment Variable to Render
+1. Render Dashboard → Your Service → Environment
+2. Add:
+   ```
+   AZURE_EMBEDDING_DEPLOYMENT=text-embedding-3-large
+   ```
+3. Save (triggers redeploy)
+
+### Step 3: Deploy & Test
+1. Commit all changes
+2. Push to GitHub (triggers Render auto-deploy)
+3. Monitor Render logs for migration success
+4. Test upload flow
+
+---
+
+## 📊 Testing Plan
+
+### Test 1: Database Migration
+**Check Render logs for**:
+```
+Applying migration `20251023103000_add_lisa_rag_tables`
+✔ Migration applied successfully
+Applying migration `20251023103500_fix_vector_index_hnsw`
+✔ Migration applied successfully
+```
+
+### Test 2: Document Upload
+1. Upload small PDF (1-2 pages)
+2. Expected logs:
+   ```
+   📤 Document upload request from: user@example.com
+   📄 File: document.pdf (10.31 KB)
+   ✅ Document record created: abc-123
+   💾 File saved: /tmp/uploads/abc-123_document.pdf
+   🔄 Starting async processing
+   📖 Step 1: Extracting text...
+   ✅ PDF processed: 2 pages
+   ✂️ Step 2: Chunking text...
+   ✅ Created 5 chunks
+   🧮 Step 3: Generating embeddings...
+   📦 Processing batch 1/1
+   ✅ All embeddings generated: 5 total
+   💾 Step 4: Storing chunks in vector database...
+   ✅ Document abc-123 processed successfully: 5 chunks
+   ```
+
+### Test 3: RAG Query
+1. Ask question about uploaded document
+2. Expected: Answer with source citations
+3. Check logs for:
+   ```
+   🔍 Searching chunks for conversation...
+   ✅ Found 3 relevant chunks
+   Top result: document.pdf (similarity: 0.892)
+   ```
+
+---
+
+## 🎓 Key Learnings from This Session
+
+### What Went Wrong:
+1. **Assumed `prisma db push` synced to production** - It only works locally
+2. **Didn't verify database schema on Render** - Tables never existed in production
+3. **Single Azure deployment for everything** - Chat and embeddings need separate deployments
+4. **IVFFlat index for high dimensions** - Should have used HNSW from the start
+
+### What Went Right:
+1. **Systematic root cause analysis** - Checked every layer: database, schema, config, imports
+2. **Comprehensive fixes** - Addressed all 7 issues in one session
+3. **HNSW index** - Better choice for 3072-dimension vectors
+4. **Clear documentation** - AZURE_EMBEDDING_SETUP.md for future reference
+
+---
+
+**Build session completed at**: October 23, 2025, 3:45 AM PST
+**Status**: ⚠️ Ready to deploy (requires Azure embedding deployment first)
+**Next Action**: Create Azure embedding deployment → Add env var → Deploy → Test

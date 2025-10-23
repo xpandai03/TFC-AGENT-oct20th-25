@@ -68,9 +68,8 @@ export async function storeDocumentChunks(
           content,
           chunk_index,
           embedding,
-          char_count,
           metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6)
+        ) VALUES ($1, $2, $3, $4, $5)
       `
 
       const values = [
@@ -78,8 +77,8 @@ export async function storeDocumentChunks(
         chunk.content,
         chunk.index,
         embeddingVector,
-        chunk.metadata.charCount,
         JSON.stringify({
+          charCount: chunk.metadata.charCount,
           startChar: chunk.metadata.startChar,
           endChar: chunk.metadata.endChar,
         }),
@@ -174,7 +173,7 @@ export async function getDocumentChunks(documentId: string): Promise<DocumentChu
         page_number,
         chunk_index,
         embedding,
-        char_count,
+        metadata,
         created_at
       FROM document_chunks
       WHERE document_id = $1
@@ -190,7 +189,7 @@ export async function getDocumentChunks(documentId: string): Promise<DocumentChu
       pageNumber: row.page_number,
       chunkIndex: row.chunk_index,
       embedding: row.embedding, // Already an array from pgvector
-      charCount: row.char_count,
+      charCount: row.metadata?.charCount || row.content.length, // Extract from metadata
       createdAt: row.created_at,
     }))
   } finally {

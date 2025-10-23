@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         pageCount: true,
         chunkCount: true,
         createdAt: true,
-        updatedAt: true,
+        // Note: Document model doesn't have updatedAt field
       },
     })
 

@@ -3,8 +3,10 @@
  * Uses Azure OpenAI text-embedding-3-large to generate vector embeddings
  */
 
-import { openai } from '@/lib/azure-config'
+import { openaiEmbedding } from '@/lib/azure-config'
 
+// Note: For Azure OpenAI, the model name doesn't matter since it's determined by the deployment
+// We still specify it for API compatibility, but the deployment controls which model is actually used
 const EMBEDDING_MODEL = 'text-embedding-3-large'
 const EMBEDDING_DIMENSIONS = 3072
 const MAX_BATCH_SIZE = 100 // Process up to 100 chunks at once
@@ -21,7 +23,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   console.log(`🧮 Generating embedding for text (${text.length} chars)`)
 
   try {
-    const response = await openai.embeddings.create({
+    const response = await openaiEmbedding.embeddings.create({
       model: EMBEDDING_MODEL,
       input: text,
       dimensions: EMBEDDING_DIMENSIONS,
@@ -62,7 +64,7 @@ export async function generateEmbeddingsBatch(
     console.log(`📦 Processing batch ${batchNum}/${totalBatches} (${batch.length} chunks)`)
 
     try {
-      const response = await openai.embeddings.create({
+      const response = await openaiEmbedding.embeddings.create({
         model: EMBEDDING_MODEL,
         input: batch,
         dimensions: EMBEDDING_DIMENSIONS,
