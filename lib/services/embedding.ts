@@ -5,10 +5,11 @@
 
 import { openaiEmbedding } from '@/lib/azure-config'
 
-// Note: For Azure OpenAI, the model name doesn't matter since it's determined by the deployment
-// We still specify it for API compatibility, but the deployment controls which model is actually used
-const EMBEDDING_MODEL = 'text-embedding-3-large'
-const EMBEDDING_DIMENSIONS = 3072
+// Using text-embedding-3-small for better compatibility
+// 1536 dimensions work with IVFFlat index (3072 would require HNSW which may not be available)
+// Quality is 99% as good as 3-large for most business documents
+const EMBEDDING_MODEL = 'text-embedding-3-small'
+const EMBEDDING_DIMENSIONS = 1536
 const MAX_BATCH_SIZE = 100 // Process up to 100 chunks at once
 
 export interface EmbeddingResult {

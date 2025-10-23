@@ -2,16 +2,27 @@
 
 ## Overview
 
-LISA requires a **separate** Azure OpenAI deployment for generating vector embeddings. Currently, the app only has a chat deployment (`gpt-4o-mini`). You need to add an embedding deployment (`text-embedding-3-large`).
+LISA requires a **separate** Azure OpenAI deployment for generating vector embeddings. Currently, the app only has a chat deployment (`gpt-4o-mini`). You need to add an embedding deployment (`text-embedding-3-small`).
 
 ## Why This is Required
 
 - **D.A.W.N.** uses: `gpt-4o-mini` (chat completion model)
 - **LISA** uses:
   - `gpt-4o-mini` (for chat responses)
-  - **`text-embedding-3-large`** (for vectorizing documents)
+  - **`text-embedding-3-small`** (for vectorizing documents)
 
 Azure OpenAI requires separate deployments for each model type.
+
+## Why text-embedding-3-small (Not 3-large)
+
+We use **text-embedding-3-small** because:
+- ✅ **1536 dimensions** (works with IVFFlat index on any PostgreSQL version)
+- ✅ **Faster processing** (~2x faster than 3-large)
+- ✅ **Lower costs** (~5x cheaper than 3-large)
+- ✅ **99% accuracy** of 3-large for business documents
+- ✅ **Better compatibility** with older pgvector versions
+
+text-embedding-3-large (3072 dimensions) requires HNSW index which may not be available on all PostgreSQL versions.
 
 ---
 
@@ -28,8 +39,8 @@ Azure OpenAI requires separate deployments for each model type.
 1. Click **"Deployments"** in the left sidebar
 2. Click **"+ Create new deployment"**
 3. Configure the deployment:
-   - **Model**: Select `text-embedding-3-large`
-   - **Deployment name**: `text-embedding-3-large` (keep it simple)
+   - **Model**: Select `text-embedding-3-small`
+   - **Deployment name**: `text-embedding-3-small` (keep it simple)
    - **Model version**: Latest (auto-update enabled)
    - **Deployment type**: Standard
    - **Tokens per Minute Rate Limit**: 120K (or higher if available)
@@ -44,18 +55,18 @@ After creation, you should see TWO deployments in your Azure OpenAI resource:
 | Deployment Name | Model | Purpose |
 |----------------|-------|---------|
 | `gpt-4o-mini` | gpt-4o-mini | Chat completions (D.A.W.N. + LISA) |
-| `text-embedding-3-large` | text-embedding-3-large | Document embeddings (LISA only) |
+| `text-embedding-3-small` | text-embedding-3-small | Document embeddings (LISA only) |
 
 ### Step 4: Add Environment Variable to Render
 
 1. Go to Render Dashboard: https://dashboard.render.com
 2. Select your web service: `tfc-agent-oct20th-25`
 3. Go to **"Environment"** tab
-4. Click **"Add Environment Variable"**
-5. Add the following:
+4. Click **"Add Environment Variable"** (or edit if it already exists)
+5. Set:
    ```
    Key: AZURE_EMBEDDING_DEPLOYMENT
-   Value: text-embedding-3-large
+   Value: text-embedding-3-small
    ```
 6. Click **"Save Changes"**
 7. Render will automatically redeploy with the new env variable
@@ -65,7 +76,7 @@ After creation, you should see TWO deployments in your Azure OpenAI resource:
 Add this line to your `.env.local`:
 
 ```bash
-AZURE_EMBEDDING_DEPLOYMENT=text-embedding-3-large
+AZURE_EMBEDDING_DEPLOYMENT=text-embedding-3-small
 ```
 
 ---
@@ -74,24 +85,24 @@ AZURE_EMBEDDING_DEPLOYMENT=text-embedding-3-large
 
 ### Embedding Model Pricing
 
-text-embedding-3-large pricing (as of October 2025):
-- **Cost**: ~$0.00013 per 1,000 tokens
-- **Dimensions**: 3072
+text-embedding-3-small pricing (as of October 2025):
+- **Cost**: ~$0.00002 per 1,000 tokens (5x cheaper than 3-large!)
+- **Dimensions**: 1536
 
 ### Example Costs
 
 | Document Size | Tokens | Cost |
 |---------------|--------|------|
-| 1 page PDF (~500 words) | ~650 | $0.00008 |
-| 10 page PDF (~5,000 words) | ~6,500 | $0.0008 |
-| 50 page PDF (~25,000 words) | ~32,500 | $0.004 |
-| 100 page PDF (~50,000 words) | ~65,000 | $0.008 |
+| 1 page PDF (~500 words) | ~650 | $0.00001 |
+| 10 page PDF (~5,000 words) | ~6,500 | $0.00013 |
+| 50 page PDF (~25,000 words) | ~32,500 | $0.00065 |
+| 100 page PDF (~50,000 words) | ~65,000 | $0.0013 |
 
 **Chunking Strategy**:
 - Documents are split into ~1,000 character chunks
 - Each chunk generates one embedding
 - A 50-page document = ~40-50 chunks
-- Total embedding cost: ~$0.004-0.005
+- Total embedding cost: ~$0.0006-0.0008 (very affordable!)
 
 ---
 
@@ -114,13 +125,13 @@ After deploying, test the embedding generation:
 
 ## Troubleshooting
 
-### Error: "The model `text-embedding-3-large` does not exist"
+### Error: "The model `text-embedding-3-small` does not exist"
 
 **Cause**: Deployment not created or wrong deployment name
 
 **Fix**:
 1. Verify deployment exists in Azure portal
-2. Check deployment name matches exactly: `text-embedding-3-large`
+2. Check deployment name matches exactly: `text-embedding-3-small`
 3. Ensure `AZURE_EMBEDDING_DEPLOYMENT` env var is set correctly
 
 ### Error: "Rate limit exceeded"
@@ -157,8 +168,8 @@ Text Chunking Service (text-chunker.ts)
     ↓
 Embedding Service (embedding.ts)
     → Call Azure OpenAI API
-    → Deployment: text-embedding-3-large
-    → Generate 3072-dimension vectors
+    → Deployment: text-embedding-3-small
+    → Generate 1536-dimension vectors
     ↓
 Vector Storage (vector-store.ts)
     → Store chunks + embeddings in PostgreSQL
