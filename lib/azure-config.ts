@@ -6,7 +6,7 @@ function getAzureConfig() {
   const apiKey = process.env.AZURE_OPENAI_API_KEY
   const resourceName = process.env.AZURE_RESOURCE_NAME
   const chatDeploymentName = process.env.AZURE_DEPLOYMENT_NAME
-  const embeddingDeploymentName = process.env.AZURE_EMBEDDING_DEPLOYMENT || 'text-embedding-3-large'
+  const embeddingDeploymentName = process.env.AZURE_EMBEDDING_DEPLOYMENT || 'text-embedding-3-small'
   const apiVersion = process.env.AZURE_API_VERSION || '2024-10-21'
 
   if (!apiKey) {

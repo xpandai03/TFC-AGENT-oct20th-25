@@ -246,9 +246,8 @@ export async function updateDocumentStatus(
     const query = `
       UPDATE documents
       SET
-        processing_status = $1,
-        ${chunkCount !== undefined ? 'chunk_count = $2,' : ''}
-        updated_at = NOW()
+        processing_status = $1
+        ${chunkCount !== undefined ? ', chunk_count = $2' : ''}
       WHERE id = $${chunkCount !== undefined ? '3' : '2'}
     `
 
