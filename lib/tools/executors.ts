@@ -5,7 +5,7 @@ import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams, ShowExcelP
  */
 const N8N_WEBHOOKS = {
   writeStatus: 'https://n8n-familyconnection.agentglu.agency/webhook/update-contact-status',
-  addNote: 'https://n8n-familyconnection.agentglu.agency/webhook-test/update-agent-notes',
+  addNote: 'https://n8n-familyconnection.agentglu.agency/webhook/update-agent-notes',
   searchDatabase: 'https://n8n-familyconnection.agentglu.agency/webhook/query-excel-data',
 }
 
