@@ -5,7 +5,6 @@
 
 import { signIn } from "@/auth"
 import WarpBackground from "@/components/WarpBackground"
-import Image from "next/image"
 
 export default function SignIn() {
   return (
@@ -18,13 +17,10 @@ export default function SignIn() {
         <div className="text-center">
           {/* Logo/Branding */}
           <div className="mb-6 flex justify-center">
-            <Image
+            <img
               src="/images/tfc-logo-white.png"
               alt="The Family Connection Logo"
-              width={1500}
-              height={465}
-              className="w-auto h-24 md:h-28 drop-shadow-2xl"
-              priority
+              className="w-auto h-24 md:h-32 drop-shadow-2xl"
             />
           </div>
 
