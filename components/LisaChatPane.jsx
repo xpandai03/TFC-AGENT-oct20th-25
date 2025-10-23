@@ -60,6 +60,30 @@ const LisaChatPane = forwardRef(function LisaChatPane(
     }
   }, [conversation?.id])
 
+  // Poll for document status updates when any documents are processing
+  useEffect(() => {
+    const hasProcessingDocuments = documents.some(
+      (doc) => doc.processingStatus === 'processing' || doc.processingStatus === 'pending'
+    )
+
+    if (!hasProcessingDocuments) {
+      return
+    }
+
+    console.log('🔄 Starting document status polling (documents still processing)')
+
+    // Poll every 2 seconds
+    const pollInterval = setInterval(() => {
+      console.log('🔄 Polling for document status updates...')
+      loadDocuments()
+    }, 2000)
+
+    return () => {
+      console.log('⏹️ Stopping document status polling')
+      clearInterval(pollInterval)
+    }
+  }, [documents, conversation?.id])
+
   const loadDocuments = async () => {
     if (!conversation?.id) return
 
