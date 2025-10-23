@@ -21,9 +21,9 @@ export default function SignIn() {
             <Image
               src="/images/tfc-logo-white.png"
               alt="The Family Connection Logo"
-              width={300}
-              height={120}
-              className="w-auto h-24 drop-shadow-2xl"
+              width={1500}
+              height={465}
+              className="w-auto h-24 md:h-28 drop-shadow-2xl"
               priority
             />
           </div>
