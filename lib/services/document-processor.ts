@@ -3,7 +3,6 @@
  * Extracts text content from various document formats (PDF, DOCX, TXT)
  */
 
-// pdf-parse is CommonJS, use dynamic import
 import mammoth from 'mammoth'
 
 export interface ProcessedDocument {
@@ -23,9 +22,10 @@ async function extractTextFromPDF(buffer: Buffer, fileName: string): Promise<Pro
   console.log('📄 Extracting text from PDF:', fileName)
 
   try {
-    // Dynamic import for CommonJS module
-    const pdf = (await import('pdf-parse')).default
-    const data = await pdf(buffer)
+    // Use require for CommonJS module in server-side context
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdfParse = require('pdf-parse')
+    const data = await pdfParse(buffer)
 
     console.log(`✅ PDF processed: ${data.numpages} pages, ${data.text.length} characters`)
 
