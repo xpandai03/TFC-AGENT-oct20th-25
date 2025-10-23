@@ -4,6 +4,7 @@
  */
 
 import mammoth from 'mammoth'
+import { extractText, getDocumentProxy } from 'unpdf'
 
 export interface ProcessedDocument {
   text: string
@@ -16,22 +17,26 @@ export interface ProcessedDocument {
 }
 
 /**
- * Extract text from PDF file
+ * Extract text from PDF file using unpdf
  */
 async function extractTextFromPDF(buffer: Buffer, fileName: string): Promise<ProcessedDocument> {
   console.log('📄 Extracting text from PDF:', fileName)
 
   try {
-    // Use require for CommonJS module in server-side context
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require('pdf-parse')
-    const data = await pdfParse(buffer)
+    // Convert Buffer to Uint8Array for unpdf
+    const uint8Array = new Uint8Array(buffer)
 
-    console.log(`✅ PDF processed: ${data.numpages} pages, ${data.text.length} characters`)
+    // Load PDF document
+    const pdf = await getDocumentProxy(uint8Array)
+
+    // Extract text with merged pages
+    const { totalPages, text } = await extractText(pdf, { mergePages: true })
+
+    console.log(`✅ PDF processed: ${totalPages} pages, ${text.length} characters`)
 
     return {
-      text: data.text,
-      pageCount: data.numpages,
+      text,
+      pageCount: totalPages,
       metadata: {
         fileType: 'pdf',
         fileName,
