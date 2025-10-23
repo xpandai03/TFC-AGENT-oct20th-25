@@ -17,6 +17,60 @@
 - **D.A.W.N.**: Excel operations (status updates, notes) - tool-based agent
 - **LISA**: Document Q&A - RAG-based agent with vector search
 
+## ❗ CRITICAL LEARNINGS
+
+### Agent Switching Must Be Visual & Immediate
+**Problem**: When user toggles from D.A.W.N. to LISA in the dropdown:
+1. Dropdown shows "LISA" but the conversation still shows D.A.W.N. responses
+2. UI doesn't change - same ChatPane is shown
+3. No visual indication that you're in "LISA mode"
+4. User confusion: "Why is D.A.W.N. responding when I selected LISA?"
+
+**Root Cause**:
+- Existing conversations have `agentType='dawn'` (or null)
+- Switching agent in dropdown doesn't switch the current conversation
+- User sees dropdown say "LISA" but conversation is still D.A.W.N.
+
+**Solution Required**:
+1. **Visual UI Change**: When LISA is selected, show LisaChatPane (different layout)
+2. **Auto-Create New Conversation**: When switching agents, automatically create new conversation with correct agentType
+3. **Clear Indication**: Show banner/header that says "📚 LISA Mode - Upload documents to begin"
+4. **Disable Old Conversations**: Don't allow mixing - once a conversation is created for D.A.W.N., it can't become LISA
+
+### Agent Context Architecture
+```
+AgentContext (contexts/AgentContext.tsx)
+  ├── selectedAgent: 'dawn' | 'lisa' (persisted in localStorage)
+  ├── setSelectedAgent(agent) → triggers new conversation creation
+  └── agentConfig: { dawn: {...}, lisa: {...} }
+
+Header.jsx
+  ├── Agent Dropdown (shows current agent)
+  └── onClick → setSelectedAgent(agent.id)
+
+AIAssistantUI.jsx
+  ├── useEffect([selectedAgent]) → auto-creates new chat when agent changes
+  ├── createNewChat() → POSTs to /api/conversations with agentType
+  └── Conditional rendering:
+      if (conversation.agentType === 'lisa') → LisaChatPane
+      else → ChatPane
+```
+
+### OpenAI Agent Configuration
+**Question**: Do we need separate OpenAI agents for D.A.W.N. and LISA?
+
+**Answer**: NO - We use the SAME Azure OpenAI deployment for both agents
+- Both use the same `deploymentName` (GPT-4 or GPT-3.5-turbo)
+- Differentiation happens via:
+  1. **System Prompts**: DAWN_SYSTEM_PROMPT vs LISA_SYSTEM_PROMPT
+  2. **Tools**: D.A.W.N. has tools (Excel operations), LISA has none
+  3. **RAG Context**: LISA adds document context to the prompt, D.A.W.N. doesn't
+
+**Files**:
+- `lib/agent/prompts.js` → DAWN_SYSTEM_PROMPT
+- `lib/agent/lisa-prompts.js` → LISA_SYSTEM_PROMPT
+- `app/api/chat/route.ts` → Routes based on agentType
+
 ## 🏗️ Architecture Design
 
 ### Agent Selection System
@@ -27,10 +81,22 @@
 └─────────────────────────────────────┘
               │
               ├── D.A.W.N. Selected
-              │   └─> ChatPane (Excel tools)
+              │   └─> ChatPane (Excel tools, no docs)
               │
               └── LISA Selected
-                  └─> LisaChatPane (Document upload + RAG)
+                  └─> LisaChatPane (Document upload REQUIRED)
+```
+
+### UI State Transitions
+```
+User Flow:
+1. Dropdown says "D.A.W.N." → ChatPane shown → Can chat immediately
+2. User clicks dropdown → selects "LISA"
+3. setSelectedAgent('lisa') called
+4. useEffect detects mismatch → calls createNewChat()
+5. New conversation created with agentType='lisa'
+6. LisaChatPane shown with prominent "Upload Documents" screen
+7. Composer DISABLED until documents uploaded
 ```
 
 ### Data Model

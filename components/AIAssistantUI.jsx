@@ -151,7 +151,8 @@ export default function AIAssistantUI() {
       console.log(`🔄 Agent switched from ${currentConversation.agentType} to ${selectedAgent}, creating new conversation`)
       createNewChat()
     }
-  }, [selectedAgent])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAgent, selectedId, conversations])
 
   const filtered = useMemo(() => {
     if (!query.trim()) return conversations
@@ -786,6 +787,26 @@ export default function AIAssistantUI() {
             currentConversationId={selectedId}
             onMoveToFolder={handleMoveToFolder}
           />
+
+          {/* Agent Mismatch Warning Banner */}
+          {selected && selected.agentType !== selectedAgent && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                <p className="text-yellow-800 dark:text-yellow-200">
+                  This is a <strong>{selected.agentType === 'lisa' ? 'LISA' : 'D.A.W.N.'}</strong> conversation, but you have{' '}
+                  <strong>{selectedAgent === 'lisa' ? 'LISA' : 'D.A.W.N.'}</strong> selected.
+                </p>
+                <button
+                  onClick={createNewChat}
+                  className="ml-auto px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium rounded-md transition-colors"
+                >
+                  Create {selectedAgent === 'lisa' ? 'LISA' : 'D.A.W.N.'} Chat
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Conditionally render LisaChatPane or ChatPane based on agent type */}
           {selected?.agentType === 'lisa' ? (
             <LisaChatPane
