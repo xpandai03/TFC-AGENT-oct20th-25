@@ -17,9 +17,9 @@ export default function SignIn() {
         {/* Logo at top */}
         <div className="mb-12 flex justify-center">
           <img
-            src="/images/tfc-logo-white.png"
+            src="/images/tfc-logo-dark.png"
             alt="The Family Connection Logo"
-            className="w-auto h-24 md:h-32 drop-shadow-2xl"
+            className="h-20 md:h-24 w-auto object-contain drop-shadow-2xl"
           />
         </div>
 
