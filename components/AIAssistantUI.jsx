@@ -324,10 +324,13 @@ export default function AIAssistantUI() {
     const conversationHistory = currentConversation?.messages || []
 
     // Prepare history for API (convert to simple format with just role and content)
-    const historyForAPI = conversationHistory.map((msg) => ({
-      role: msg.role,
-      content: msg.content,
-    }))
+    // Filter out Excel preview messages as they're UI-only and don't have regular content
+    const historyForAPI = conversationHistory
+      .filter((msg) => msg.type !== 'excel_preview')
+      .map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }))
 
     console.log('📚 Conversation history length:', historyForAPI.length, 'messages')
 
