@@ -4,6 +4,7 @@ import { useState, forwardRef, useImperativeHandle, useRef } from "react"
 import { Pencil, RefreshCw, Check, X, Square } from "lucide-react"
 import Message from "./Message"
 import Composer from "./Composer"
+import WelcomeAnimation from "./WelcomeAnimation"
 import { cls, timeAgo } from "./utils"
 
 function ThinkingMessage({ onPause }) {
@@ -46,7 +47,10 @@ const ChatPane = forwardRef(function ChatPane(
     [],
   )
 
-  if (!conversation) return null
+  // Show welcome animation when no conversation is selected
+  if (!conversation) {
+    return <WelcomeAnimation />
+  }
 
   const tags = ["Certified", "Personalized", "Experienced", "Helpful"]
   const messages = Array.isArray(conversation.messages) ? conversation.messages : []
