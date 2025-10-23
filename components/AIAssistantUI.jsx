@@ -388,6 +388,75 @@ export default function AIAssistantUI() {
         throw new Error(`API returned status ${response.status}`)
       }
 
+      // Check if response is JSON (Excel preview) or streaming text
+      const contentType = response.headers.get('content-type')
+      const isJSON = contentType?.includes('application/json')
+
+      if (isJSON) {
+        // Handle JSON response with Excel preview
+        const data = await response.json()
+        console.log('📊 Received Excel preview response:', data)
+
+        // Add assistant message with text
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.id !== currentConvId) return c
+            const asstMsg = {
+              id: assistantMsgId,
+              role: "assistant",
+              content: data.text,
+              createdAt: new Date().toISOString(),
+            }
+            const msgs = [...(c.messages || []), asstMsg]
+            return {
+              ...c,
+              messages: msgs,
+              updatedAt: new Date().toISOString(),
+              messageCount: msgs.length,
+            }
+          }),
+        )
+
+        // Add Excel preview as a separate message
+        if (data.excelPreview) {
+          const previewMsgId = Math.random().toString(36).slice(2)
+          setConversations((prev) =>
+            prev.map((c) => {
+              if (c.id !== currentConvId) return c
+              const previewMsg = {
+                id: previewMsgId,
+                role: "assistant",
+                type: "excel_preview",
+                excelPreview: data.excelPreview,
+                createdAt: new Date().toISOString(),
+              }
+              const msgs = [...(c.messages || []), previewMsg]
+              return {
+                ...c,
+                messages: msgs,
+                updatedAt: new Date().toISOString(),
+                messageCount: msgs.length,
+              }
+            }),
+          )
+        }
+
+        setIsThinking(false)
+        setThinkingConvId(null)
+
+        // Save assistant message to database
+        await fetch(`/api/conversations/${convId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'assistant',
+            content: data.text,
+          }),
+        })
+
+        return
+      }
+
       // Handle streaming response
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()

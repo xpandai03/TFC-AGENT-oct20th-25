@@ -49,6 +49,7 @@ export async function POST(request: Request) {
     // Agentic loop with tool calling support
     let currentMessages = [...messages]
     const maxSteps = 5
+    let excelPreviewData = null // Track Excel preview if showExcelPreview is called
 
     for (let step = 0; step < maxSteps; step++) {
       console.log(`🔄 Step ${step + 1}/${maxSteps}`)
@@ -76,12 +77,28 @@ export async function POST(request: Request) {
       if (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0) {
         console.log('✅ Final response ready, streaming to client')
 
-        // Create a streaming response
+        const textContent = assistantMessage.content || 'I apologize, but I was unable to generate a response.'
+
+        // If Excel preview data exists, return JSON response instead of streaming
+        if (excelPreviewData) {
+          console.log('📊 Returning response with Excel preview data')
+          return new Response(
+            JSON.stringify({
+              text: textContent,
+              excelPreview: excelPreviewData
+            }),
+            {
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            }
+          )
+        }
+
+        // Normal streaming response without Excel preview
         const stream = new ReadableStream({
           async start(controller) {
             try {
-              const textContent = assistantMessage.content || 'I apologize, but I was unable to generate a response.'
-
               // Stream the response character by character for smooth UX
               const encoder = new TextEncoder()
               for (const char of textContent) {
@@ -119,6 +136,12 @@ export async function POST(request: Request) {
           const result = await handleToolCall(toolCall.function.name, args)
 
           console.log(`  ✅ Tool result:`, result)
+
+          // Check if this is an Excel preview tool call
+          if (toolCall.function.name === 'showExcelPreview' && result.success && result.data) {
+            excelPreviewData = result.data
+            console.log('📊 Excel preview data captured:', excelPreviewData)
+          }
 
           // HIPAA Audit: Log successful tool call
           logToolCall(userEmail, toolCall.function.name, args, result)

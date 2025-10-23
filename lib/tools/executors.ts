@@ -1,4 +1,4 @@
-import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams } from './definitions'
+import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams, ShowExcelPreviewParams } from './definitions'
 
 /**
  * n8n Webhook URLs for tool execution
@@ -135,6 +135,45 @@ export async function executeSearchDatabase(params: SearchDatabaseParams) {
     }
   } catch (error) {
     console.error('❌ Error calling n8n webhook:', error)
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    }
+  }
+}
+
+/**
+ * Execute showExcelPreview tool
+ * Returns the SharePoint Excel embed URL for display in chat
+ */
+export async function executeShowExcelPreview(params: ShowExcelPreviewParams) {
+  console.log('🔧 Tool: showExcelPreview called with:', params)
+
+  try {
+    // Get embed URL from environment variable
+    const embedUrl = process.env.EXCEL_EMBED_URL
+
+    if (!embedUrl) {
+      console.error('❌ EXCEL_EMBED_URL not configured')
+      return {
+        success: false,
+        message: 'Excel preview is not configured. Please contact administrator.',
+      }
+    }
+
+    console.log('✅ Returning Excel embed URL')
+
+    return {
+      success: true,
+      message: `Showing Excel spreadsheet preview - ${params.reason}`,
+      data: {
+        embedUrl,
+        reason: params.reason,
+        type: 'excel_preview', // Special flag for frontend
+      },
+    }
+  } catch (error) {
+    console.error('❌ Error in showExcelPreview:', error)
     return {
       success: false,
       message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,

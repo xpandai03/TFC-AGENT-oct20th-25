@@ -75,6 +75,24 @@ export const tools: ChatCompletionTool[] = [
         additionalProperties: false
       }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'showExcelPreview',
+      description: 'Display an embedded preview of the Excel client spreadsheet. Use this when the user asks to verify updates, see the spreadsheet, view raw data, or check the Excel file.',
+      parameters: {
+        type: 'object',
+        properties: {
+          reason: {
+            type: 'string',
+            description: 'Brief explanation of why the preview is being shown. Examples: "Verifying status update for John Doe", "User requested to see spreadsheet", "Showing updated client data"'
+          }
+        },
+        required: ['reason'],
+        additionalProperties: false
+      }
+    }
   }
 ]
 
@@ -93,4 +111,8 @@ export interface AddNoteParams {
 
 export interface SearchDatabaseParams {
   query: string
+}
+
+export interface ShowExcelPreviewParams {
+  reason: string
 }

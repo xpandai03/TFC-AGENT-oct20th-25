@@ -5,6 +5,7 @@ import { Pencil, RefreshCw, Check, X, Square } from "lucide-react"
 import Message from "./Message"
 import Composer from "./Composer"
 import WelcomeAnimation from "./WelcomeAnimation"
+import ExcelPreview from "./ExcelPreview"
 import { cls, timeAgo } from "./utils"
 
 function ThinkingMessage({ onPause }) {
@@ -105,7 +106,13 @@ const ChatPane = forwardRef(function ChatPane(
           <>
             {messages.map((m) => (
               <div key={m.id} className="space-y-2">
-                {editingId === m.id ? (
+                {/* Excel Preview Message */}
+                {m.type === "excel_preview" ? (
+                  <ExcelPreview
+                    embedUrl={m.excelPreview?.embedUrl}
+                    reason={m.excelPreview?.reason}
+                  />
+                ) : editingId === m.id ? (
                   <div className={cls("rounded-2xl border p-2", "border-zinc-200 dark:border-zinc-800")}>
                     <textarea
                       value={draft}
