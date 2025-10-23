@@ -4,11 +4,12 @@
   "private": true,
   "packageManager": "npm@10.0.0",
   "scripts": {
-    "build": "next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
-    "test:azure": "tsx --require ./scripts/load-env.js scripts/test-azure.ts"
+    "test:azure": "tsx --require ./scripts/load-env.js scripts/test-azure.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@ai-sdk/azure": "^2.0.53",
