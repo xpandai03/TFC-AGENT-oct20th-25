@@ -127,6 +127,85 @@ export const INITIAL_CONVERSATIONS = [
 ]
 
 export const INITIAL_TEMPLATES = [
+  // DAWN Prompt Templates
+  {
+    id: "dawn-clear-framework",
+    name: "CLEAR Prompt Framework",
+    content: `You are a <role> helping with <business_context>.
+
+C — Clarity
+Problem: <one-sentence statement>.
+Objective & metric: <target + deadline>.
+Scope & boundaries: <what's in/out>.
+
+L — Logic
+Steps:
+1) <step 1>
+2) <step 2>
+3) <step 3>
+Decision rules: <thresholds/routing>.
+Data contracts: <inputs + schemas + auth>.
+
+E — Examples
+Positive: <happy-path>.
+Edge cases: <case 1>, <case 2>.
+Counterexample: <what NOT to do>.
+
+A — Adaptation
+Iteration protocol: <how to refine>.
+Feedback signals: <metrics, review cadence>.
+Change policy: <versioning/rollback>.
+
+R — Results
+Acceptance tests: <unit/integration checks>.
+Success criteria (KPIs): <thresholds>.
+Reporting: <dashboard/alerts/audit>.
+
+Deliverable: <artifact + format>.
+Constraints/Guardrails: <compliance, safety, privacy>.`,
+    snippet: "Structured prompt framework for creating clear, comprehensive requests...",
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "dawn-update-status",
+    name: "Update Contact Status",
+    content: `Update <CONTACT_FULL_NAME>'s status to <NEW_STATUS>`,
+    snippet: "Quick template for updating a client's status in Excel...",
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "dawn-add-note",
+    name: "Add Note to Contact",
+    content: `Add a note to <CONTACT_FULL_NAME>'s record: <NOTE_CONTENT>`,
+    snippet: "Quick template for adding notes/documentation to client records...",
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "dawn-view-data",
+    name: "View Spreadsheet Data",
+    content: `Show me the spreadsheet to verify the update`,
+    snippet: "Display Excel spreadsheet to verify recent changes...",
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "dawn-batch-update",
+    name: "Batch Status Update",
+    content: `Update these contacts to <NEW_STATUS>:
+- <CONTACT_NAME_1>
+- <CONTACT_NAME_2>
+- <CONTACT_NAME_3>
+
+Reason: <BRIEF_EXPLANATION>`,
+    snippet: "Update multiple contacts' statuses at once with reason...",
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // General Templates
   {
     id: "t1",
     name: "Bug Report",
