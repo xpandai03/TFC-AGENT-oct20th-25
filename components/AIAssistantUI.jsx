@@ -13,7 +13,7 @@ import { INITIAL_CONVERSATIONS, INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./moc
 import { useAgent } from "@/contexts/AgentContext"
 
 export default function AIAssistantUI() {
-  const { selectedAgent } = useAgent()
+  const { selectedAgent, setSelectedAgent } = useAgent()
   const [theme, setTheme] = useState(() => {
     const saved = typeof window !== "undefined" && localStorage.getItem("theme")
     if (saved) return saved
@@ -762,6 +762,15 @@ export default function AIAssistantUI() {
           folderCounts={folderCounts}
           selectedId={selectedId}
           onSelect={(id) => {
+            // Find the conversation being selected
+            const conversation = conversations.find(c => c.id === id)
+
+            // Sync agent dropdown to match conversation's agent type
+            if (conversation && conversation.agentType !== selectedAgent) {
+              console.log(`🔄 Syncing agent dropdown to match conversation: ${conversation.agentType}`)
+              setSelectedAgent(conversation.agentType)
+            }
+
             setSelectedId(id)
             setSidebarOpen(false) // Close sidebar on mobile when selecting conversation
             loadMessages(id) // Load messages for selected conversation
