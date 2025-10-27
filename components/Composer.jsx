@@ -3,6 +3,8 @@
 import { useRef, useState, forwardRef, useImperativeHandle, useEffect } from "react"
 import { ArrowUp, Loader2, Plus, Mic } from "lucide-react"
 import ComposerActionsPopover from "./ComposerActionsPopover"
+import RecordingOverlay from "./RecordingOverlay"
+import { useSpeechRecognition } from "@/lib/hooks/useSpeechRecognition"
 import { cls } from "./utils"
 
 const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
@@ -10,7 +12,20 @@ const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
   const [sending, setSending] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [lineCount, setLineCount] = useState(1)
+  const [recordingDuration, setRecordingDuration] = useState(0)
+  const [showError, setShowError] = useState(null)
   const inputRef = useRef(null)
+
+  // Speech recognition hook
+  const {
+    transcript,
+    isRecording,
+    error: speechError,
+    startRecording,
+    stopRecording,
+    resetTranscript,
+    isSupported
+  } = useSpeechRecognition()
 
   useEffect(() => {
     if (inputRef.current) {
@@ -36,6 +51,42 @@ const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
       }
     }
   }, [value])
+
+  // Update textarea with transcript
+  useEffect(() => {
+    if (transcript) {
+      setValue(transcript)
+    }
+  }, [transcript])
+
+  // Timer effect for recording duration
+  useEffect(() => {
+    let interval
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingDuration(prev => prev + 1)
+      }, 1000)
+    } else {
+      setRecordingDuration(0)
+    }
+    return () => clearInterval(interval)
+  }, [isRecording])
+
+  // Handle speech recognition errors
+  useEffect(() => {
+    if (speechError) {
+      const errorMessages = {
+        'not-supported': 'Voice input not supported in this browser. Try Chrome or Edge.',
+        'not-allowed': 'Microphone access denied. Please enable it in browser settings.',
+        'audio-capture': 'No microphone found. Please connect a microphone.',
+        'network': 'Network error. Voice input requires an internet connection.',
+      }
+      setShowError(errorMessages[speechError] || 'An error occurred with voice input.')
+
+      // Auto-hide error after 5 seconds
+      setTimeout(() => setShowError(null), 5000)
+    }
+  }, [speechError])
 
   useImperativeHandle(
     ref,
@@ -70,10 +121,61 @@ const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
     }
   }
 
+  // Handle mic button click
+  const handleMicClick = async () => {
+    if (!isSupported()) {
+      setShowError('Voice input not supported in this browser. Try Chrome or Edge.')
+      return
+    }
+
+    if (isRecording) {
+      // Stop recording (same as confirm)
+      stopRecording()
+    } else {
+      // Start recording
+      try {
+        await startRecording()
+      } catch (err) {
+        console.error('Failed to start recording:', err)
+        // Error is handled by useEffect above
+      }
+    }
+  }
+
+  // Handle cancel recording
+  const handleCancelRecording = () => {
+    stopRecording()
+    resetTranscript()
+    setValue('') // Clear textarea
+  }
+
+  // Handle confirm recording
+  const handleConfirmRecording = () => {
+    stopRecording()
+    // Keep transcript in textarea
+    inputRef.current?.focus() // Focus textarea for editing
+  }
+
   const hasContent = value.length > 0
 
   return (
-    <div className="border-t border-zinc-200/60 p-4 dark:border-zinc-800">
+    <>
+      {/* Recording Overlay */}
+      <RecordingOverlay
+        isRecording={isRecording}
+        duration={recordingDuration}
+        onCancel={handleCancelRecording}
+        onConfirm={handleConfirmRecording}
+      />
+
+      {/* Error Toast */}
+      {showError && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg animate-fade-in">
+          <p className="text-sm font-medium">{showError}</p>
+        </div>
+      )}
+
+      <div className="border-t border-zinc-200/60 p-4 dark:border-zinc-800">
       <div
         className={cls(
           "mx-auto flex flex-col rounded-2xl border bg-white shadow-sm dark:bg-zinc-950 transition-all duration-200",
@@ -118,8 +220,14 @@ const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
 
           <div className="flex items-center gap-1 shrink-0">
             <button
-              className="inline-flex items-center justify-center rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 transition-colors"
-              title="Voice input"
+              onClick={handleMicClick}
+              className={cls(
+                "inline-flex items-center justify-center rounded-full p-2 transition-all duration-200",
+                isRecording
+                  ? "bg-red-500 text-white animate-pulse"
+                  : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+              )}
+              title={isRecording ? "Stop recording" : "Voice input"}
             >
               <Mic className="h-4 w-4" />
             </button>
@@ -153,6 +261,7 @@ const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
         for newline
       </div>
     </div>
+    </>
   )
 })
 
