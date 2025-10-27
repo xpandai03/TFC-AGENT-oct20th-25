@@ -49,10 +49,10 @@ export default function SignIn() {
             {/* Organization */}
             <div className="mb-8">
               <p className="text-lg font-semibold text-white">
-                The Family Connection
+                Welcome TFC Admin Team
               </p>
               <p className="mt-1 text-sm text-white/80">
-                Admin Support AI Assistant
+                Please login with your credentials
               </p>
             </div>
 
