@@ -8,8 +8,7 @@
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
-    "test:azure": "tsx --require ./scripts/load-env.js scripts/test-azure.ts",
-    "postinstall": "prisma generate"
+    "test:azure": "tsx --require ./scripts/load-env.js scripts/test-azure.ts"
   },
   "dependencies": {
     "@ai-sdk/azure": "^2.0.53",
