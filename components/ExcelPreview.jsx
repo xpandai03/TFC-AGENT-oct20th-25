@@ -6,8 +6,20 @@ import { FileSpreadsheet, X, Maximize2, Minimize2 } from 'lucide-react'
 export default function ExcelPreview({ embedUrl, reason }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   if (!isVisible) return null
+
+  // Validate embed URL
+  if (!embedUrl || !embedUrl.startsWith('http')) {
+    return (
+      <div className="my-4 rounded-lg border border-red-200 dark:border-red-800 overflow-hidden bg-red-50 dark:bg-red-900/20 p-4">
+        <p className="text-sm text-red-600 dark:text-red-400">
+          ⚠️ Invalid Excel embed URL. Please check EXCEL_EMBED_URL environment variable.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="my-4 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-lg">
@@ -50,7 +62,7 @@ export default function ExcelPreview({ embedUrl, reason }) {
 
       {/* Embedded Excel iframe */}
       <div
-        className={`bg-white transition-all duration-300 ${
+        className={`bg-white transition-all duration-300 relative ${
           isExpanded ? 'h-[600px]' : 'h-[400px]'
         }`}
       >
@@ -62,8 +74,36 @@ export default function ExcelPreview({ embedUrl, reason }) {
           scrolling="yes"
           title="Excel Spreadsheet Preview"
           className="w-full h-full"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox"
+          onError={() => {
+            console.error('❌ Excel iframe failed to load:', embedUrl)
+            setLoadError(true)
+          }}
+          onLoad={() => {
+            console.log('✅ Excel iframe loaded successfully')
+            setLoadError(false)
+          }}
         />
+        {loadError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+            <div className="text-center p-4">
+              <p className="text-sm text-red-600 dark:text-red-400 mb-2">
+                ⚠️ Failed to load Excel preview
+              </p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3">
+                The embed URL may be incorrect or the file may not be shared properly.
+              </p>
+              <a
+                href={embedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Open in new tab →
+              </a>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
