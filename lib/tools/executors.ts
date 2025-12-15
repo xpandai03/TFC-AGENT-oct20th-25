@@ -150,14 +150,25 @@ export async function executeShowExcelPreview(params: ShowExcelPreviewParams) {
   console.log('🔧 Tool: showExcelPreview called with:', params)
 
   try {
-    // Get embed URL from environment variable
-    const embedUrl = process.env.EXCEL_EMBED_URL
+    // Get embed URL from environment variable (check both possible names)
+    const embedUrl = process.env.EXCEL_EMBED_URL || process.env.EXCEL_EMBED_URL?.trim()
+    
+    // Debug: Log environment variable status
+    console.log('📋 Excel Embed URL check:', {
+      hasEnvVar: !!process.env.EXCEL_EMBED_URL,
+      envVarLength: process.env.EXCEL_EMBED_URL?.length || 0,
+      envVarPrefix: process.env.EXCEL_EMBED_URL ? `${process.env.EXCEL_EMBED_URL.substring(0, 30)}...` : 'N/A',
+      hasEmbedUrl: !!embedUrl,
+      embedUrlLength: embedUrl?.length || 0,
+    })
 
     if (!embedUrl) {
       console.error('❌ EXCEL_EMBED_URL not configured')
+      console.error('💡 To fix: Add EXCEL_EMBED_URL environment variable in Railway')
+      console.error('💡 Get embed URL from SharePoint/OneDrive: File → Share → Embed')
       return {
         success: false,
-        message: 'Excel preview is not configured. Please contact administrator.',
+        message: 'Excel preview is not configured. Please add EXCEL_EMBED_URL environment variable in Railway settings.',
       }
     }
 
