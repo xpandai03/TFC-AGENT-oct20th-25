@@ -17,6 +17,19 @@ export async function POST(request: Request) {
   try {
     const { execSync } = require('child_process')
     
+    // Step 1: Resolve any failed migrations first
+    console.log('🔧 Resolving failed migrations...')
+    try {
+      execSync('bash scripts/fix-migrations.sh', {
+        encoding: 'utf-8',
+        env: process.env,
+        stdio: 'pipe',
+      })
+    } catch (fixError: any) {
+      console.log('⚠️  Fix migrations script completed (may have warnings):', fixError.message)
+    }
+    
+    // Step 2: Run migrations
     console.log('🔄 Running database migrations...')
     const output = execSync('npx prisma migrate deploy', {
       encoding: 'utf-8',
@@ -32,11 +45,34 @@ export async function POST(request: Request) {
     })
   } catch (error: any) {
     console.error('❌ Migration failed:', error)
-    return NextResponse.json({
-      success: false,
-      error: error.message,
-      output: error.stdout?.toString() || error.stderr?.toString(),
-    }, { status: 500 })
+    
+    // Try to resolve failed migrations and retry once
+    try {
+      console.log('🔄 Attempting to resolve and retry...')
+      execSync('bash scripts/fix-migrations.sh', {
+        encoding: 'utf-8',
+        env: process.env,
+        stdio: 'pipe',
+      })
+      const retryOutput = execSync('npx prisma migrate deploy', {
+        encoding: 'utf-8',
+        env: process.env,
+      })
+      console.log('✅ Retry successful:', retryOutput)
+      return NextResponse.json({
+        success: true,
+        message: 'Migrations completed after retry',
+        output: retryOutput,
+      })
+    } catch (retryError: any) {
+      return NextResponse.json({
+        success: false,
+        error: error.message,
+        retryError: retryError.message,
+        output: error.stdout?.toString() || error.stderr?.toString(),
+        retryOutput: retryError.stdout?.toString() || retryError.stderr?.toString(),
+      }, { status: 500 })
+    }
   }
 }
 

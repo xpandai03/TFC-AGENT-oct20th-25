@@ -1,14 +1,22 @@
 #!/bin/bash
 # ================================================
 # Fix Failed Migrations Script
-# Marks failed migration as rolled-back so Prisma can proceed
+# Marks failed migrations as rolled-back so Prisma can proceed
 # ================================================
 
 echo "🔧 Checking for failed migrations..."
 
-# Mark the failed migration as rolled back
-# This tells Prisma: "this migration was intentionally rolled back, ignore it"
-npx prisma migrate resolve --rolled-back 20251023103000_add_lisa_rag_tables 2>/dev/null || echo "Migration already resolved or doesn't exist"
+# List of migrations that might have failed
+# Mark them as rolled-back so Prisma can retry them
+MIGRATIONS=(
+  "20251023103000_add_lisa_rag_tables"
+  "20251023115000_add_lisa_rag_system"
+)
 
-echo "✅ Failed migrations marked as resolved"
+for migration in "${MIGRATIONS[@]}"; do
+  echo "  Checking migration: $migration"
+  npx prisma migrate resolve --rolled-back "$migration" 2>/dev/null && echo "    ✅ Resolved: $migration" || echo "    ℹ️  $migration: already resolved or doesn't exist"
+done
+
+echo "✅ Failed migrations check completed"
 echo "📦 Proceeding with normal migrations..."
