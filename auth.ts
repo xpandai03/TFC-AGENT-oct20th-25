@@ -27,9 +27,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const isLoggedIn = !!auth?.user
       const isOnApp = !nextUrl.pathname.startsWith('/api/auth')
       const isHealthCheck = nextUrl.pathname === '/api/health'
+      const isMigrationEndpoint = nextUrl.pathname === '/api/migrate' || nextUrl.pathname === '/api/fix-agent-type'
 
-      // Allow health check without auth
-      if (isHealthCheck) {
+      // Allow health check and migration endpoints without auth (they have their own auth via Bearer token)
+      if (isHealthCheck || isMigrationEndpoint) {
         return true
       }
 
