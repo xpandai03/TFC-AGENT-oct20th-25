@@ -240,6 +240,11 @@ async function handleDawnChat(
         tools,
         tool_choice: 'auto', // Let the AI decide when to use tools
         temperature: 0.7,
+      }, {
+        // Ensure api-key header is sent for Azure
+        headers: {
+          'api-key': process.env.AZURE_OPENAI_API_KEY || process.env.AZURE_OPENAI_KEY || '',
+        },
       })
       console.log('✅ Azure OpenAI response received')
     } catch (error: any) {
@@ -250,6 +255,17 @@ async function handleDawnChat(
         code: error.code,
         type: error.type,
       })
+      
+      // Log authentication-related details for 401 errors
+      if (error.status === 401) {
+        const apiKey = process.env.AZURE_OPENAI_API_KEY || process.env.AZURE_OPENAI_KEY
+        console.error('🔐 Authentication Debug:', {
+          hasApiKey: !!apiKey,
+          apiKeyLength: apiKey?.length || 0,
+          apiKeyPrefix: apiKey ? `${apiKey.substring(0, 10)}...` : 'N/A',
+        })
+      }
+      
       throw new Error(`Azure OpenAI API error: ${error.message || 'Unknown error'}`)
     }
 
