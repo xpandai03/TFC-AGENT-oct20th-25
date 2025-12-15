@@ -65,13 +65,47 @@ export async function POST(request: Request) {
         output: retryOutput,
       })
     } catch (retryError: any) {
-      return NextResponse.json({
-        success: false,
-        error: error.message,
-        retryError: retryError.message,
-        output: error.stdout?.toString() || error.stderr?.toString(),
-        retryOutput: retryError.stdout?.toString() || retryError.stderr?.toString(),
-      }, { status: 500 })
+      // Last resort: try direct SQL fix
+      console.log('🔧 Attempting direct SQL fix for agent_type column...')
+      try {
+        const { PrismaClient } = require('@prisma/client')
+        const prisma = new PrismaClient()
+        
+        // Run direct SQL to add agent_type column
+        await prisma.$executeRawUnsafe(`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_name = 'conversations' AND column_name = 'agent_type'
+            ) THEN
+              ALTER TABLE "conversations" ADD COLUMN "agent_type" VARCHAR(50) DEFAULT 'dawn';
+            END IF;
+          END $$;
+        `)
+        
+        await prisma.$executeRawUnsafe(`
+          CREATE INDEX IF NOT EXISTS "conversations_agent_type_idx" ON "conversations"("agent_type");
+        `)
+        
+        await prisma.$disconnect()
+        
+        console.log('✅ Direct SQL fix successful - agent_type column added')
+        return NextResponse.json({
+          success: true,
+          message: 'Migrations failed but direct SQL fix applied successfully',
+          note: 'agent_type column has been added directly via SQL',
+        })
+      } catch (sqlError: any) {
+        return NextResponse.json({
+          success: false,
+          error: error.message,
+          retryError: retryError.message,
+          sqlError: sqlError.message,
+          output: error.stdout?.toString() || error.stderr?.toString(),
+          retryOutput: retryError.stdout?.toString() || retryError.stderr?.toString(),
+        }, { status: 500 })
+      }
     }
   }
 }

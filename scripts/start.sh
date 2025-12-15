@@ -10,13 +10,22 @@ if [ -n "$DATABASE_URL" ]; then
   bash scripts/fix-migrations.sh || true
   
   echo "🗄️  Ensuring database migrations are applied..."
-  # Run migrations - this will retry any that were marked as rolled-back
+  # Run migrations - this will skip any that were marked as applied
   npx prisma migrate deploy || {
     echo "⚠️  Migration deploy failed, attempting to resolve and retry..."
     # If deploy fails, try to resolve failed migrations again
     bash scripts/fix-migrations.sh || true
     # Retry once more
-    npx prisma migrate deploy || echo "⚠️  Migration retry failed - manual intervention may be needed"
+    npx prisma migrate deploy || {
+      echo "⚠️  Migration retry failed"
+      echo "🔧 Attempting direct SQL fix for agent_type column..."
+      # Last resort: add agent_type column directly via SQL
+      if command -v psql &> /dev/null; then
+        psql "$DATABASE_URL" -f scripts/add-agent-type-direct.sql || echo "⚠️  Direct SQL also failed"
+      else
+        echo "⚠️  psql not available, cannot run direct SQL"
+      fi
+    }
   }
 else
   echo "⚠️  DATABASE_URL not set, skipping migrations"
