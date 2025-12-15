@@ -112,13 +112,33 @@ ${ragInstructions}`
   console.log('📝 Total messages being sent to AI:', messages.length)
 
   // Step 4: Generate response using Azure OpenAI
-  const response = await openai.chat.completions.create({
-    model: deploymentName,
-    messages: messages,
-    temperature: 0.7,
-    max_tokens: 1500,
-    // LISA doesn't use tools - it's purely conversational with RAG context
+  console.log('🤖 Calling Azure OpenAI for LISA response...')
+  console.log('📋 Config:', {
+    deployment: deploymentName,
+    messageCount: messages.length,
+    hasRAGContext: ragContext.hasContext,
   })
+  
+  let response
+  try {
+    response = await openai.chat.completions.create({
+      model: deploymentName,
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 1500,
+      // LISA doesn't use tools - it's purely conversational with RAG context
+    })
+    console.log('✅ Azure OpenAI response received')
+  } catch (error: any) {
+    console.error('❌ Azure OpenAI API error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+      type: error.type,
+    })
+    throw new Error(`Azure OpenAI API error: ${error.message || 'Unknown error'}`)
+  }
 
   const assistantMessage = response.choices[0].message
   const textContent = assistantMessage.content || 'I apologize, but I was unable to generate a response.'
@@ -189,13 +209,33 @@ async function handleDawnChat(
     console.log(`🔄 Step ${step + 1}/${maxSteps}`)
 
     // Call Azure OpenAI
-    const response = await openai.chat.completions.create({
-      model: deploymentName, // Azure uses deployment name as model parameter
-      messages: currentMessages,
-      tools,
-      tool_choice: 'auto', // Let the AI decide when to use tools
-      temperature: 0.7,
+    console.log(`🤖 Calling Azure OpenAI for DAWN response (step ${step + 1})...`)
+    console.log('📋 Config:', {
+      deployment: deploymentName,
+      messageCount: currentMessages.length,
+      toolCount: tools.length,
     })
+    
+    let response
+    try {
+      response = await openai.chat.completions.create({
+        model: deploymentName, // Azure uses deployment name as model parameter
+        messages: currentMessages,
+        tools,
+        tool_choice: 'auto', // Let the AI decide when to use tools
+        temperature: 0.7,
+      })
+      console.log('✅ Azure OpenAI response received')
+    } catch (error: any) {
+      console.error('❌ Azure OpenAI API error:', error)
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        code: error.code,
+        type: error.type,
+      })
+      throw new Error(`Azure OpenAI API error: ${error.message || 'Unknown error'}`)
+    }
 
     const assistantMessage = response.choices[0].message
     console.log('🤖 Assistant response:', {

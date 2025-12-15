@@ -6,15 +6,34 @@ function getAzureConfig() {
   const apiKey = process.env.AZURE_OPENAI_API_KEY
   const resourceName = process.env.AZURE_RESOURCE_NAME
   const chatDeploymentName = process.env.AZURE_DEPLOYMENT_NAME
-  const embeddingDeploymentName = process.env.AZURE_EMBEDDING_DEPLOYMENT || 'text-embedding-3-small'
+  const embeddingDeploymentName = process.env.AZURE_EMBEDDING_DEPLOYMENT || 'text-embedding-3-large'
   const apiVersion = process.env.AZURE_API_VERSION || '2024-10-21'
+  
+  // Support for new Azure AI Studio endpoint format
+  const customEndpoint = process.env.AZURE_OPENAI_ENDPOINT
+  const customChatEndpoint = process.env.AZURE_CHAT_ENDPOINT
+  const customEmbeddingEndpoint = process.env.AZURE_EMBEDDING_ENDPOINT
 
   if (!apiKey) {
     throw new Error('Missing AZURE_OPENAI_API_KEY environment variable')
   }
 
+  // If custom endpoints are provided, use them (new Azure AI Studio format)
+  if (customChatEndpoint || customEndpoint) {
+    return {
+      apiKey,
+      resourceName: resourceName || 'custom',
+      chatDeploymentName: chatDeploymentName || 'gpt-4o-mini',
+      embeddingDeploymentName,
+      apiVersion,
+      customChatEndpoint: customChatEndpoint || customEndpoint,
+      customEmbeddingEndpoint: customEmbeddingEndpoint || customEndpoint,
+    }
+  }
+
+  // Otherwise, use traditional format
   if (!resourceName) {
-    throw new Error('Missing AZURE_RESOURCE_NAME environment variable')
+    throw new Error('Missing AZURE_RESOURCE_NAME environment variable (or provide AZURE_OPENAI_ENDPOINT)')
   }
 
   if (!chatDeploymentName) {
@@ -27,6 +46,8 @@ function getAzureConfig() {
     chatDeploymentName,
     embeddingDeploymentName,
     apiVersion,
+    customChatEndpoint: null,
+    customEmbeddingEndpoint: null,
   }
 }
 
@@ -34,13 +55,28 @@ function getAzureConfig() {
 let _openai: OpenAI | null = null
 export function getOpenAIClient(): OpenAI {
   if (!_openai) {
-    const { apiKey, resourceName, chatDeploymentName, apiVersion } = getAzureConfig()
-    _openai = new OpenAI({
-      apiKey,
-      baseURL: `https://${resourceName}.openai.azure.com/openai/deployments/${chatDeploymentName}`,
-      defaultQuery: { 'api-version': apiVersion },
-      defaultHeaders: { 'api-key': apiKey },
-    })
+    const config = getAzureConfig()
+    
+    // Use custom endpoint if provided (new Azure AI Studio format)
+    if (config.customChatEndpoint) {
+      console.log('🔗 Using custom Azure endpoint:', config.customChatEndpoint)
+      _openai = new OpenAI({
+        apiKey: config.apiKey,
+        baseURL: config.customChatEndpoint.replace(/\/$/, ''), // Remove trailing slash
+        defaultQuery: { 'api-version': config.apiVersion },
+        defaultHeaders: { 'api-key': config.apiKey },
+      })
+    } else {
+      // Traditional format
+      const baseURL = `https://${config.resourceName}.openai.azure.com/openai/deployments/${config.chatDeploymentName}`
+      console.log('🔗 Using traditional Azure endpoint:', baseURL)
+      _openai = new OpenAI({
+        apiKey: config.apiKey,
+        baseURL,
+        defaultQuery: { 'api-version': config.apiVersion },
+        defaultHeaders: { 'api-key': config.apiKey },
+      })
+    }
   }
   return _openai
 }
@@ -49,13 +85,28 @@ export function getOpenAIClient(): OpenAI {
 let _openaiEmbedding: OpenAI | null = null
 export function getOpenAIEmbeddingClient(): OpenAI {
   if (!_openaiEmbedding) {
-    const { apiKey, resourceName, embeddingDeploymentName, apiVersion } = getAzureConfig()
-    _openaiEmbedding = new OpenAI({
-      apiKey,
-      baseURL: `https://${resourceName}.openai.azure.com/openai/deployments/${embeddingDeploymentName}`,
-      defaultQuery: { 'api-version': apiVersion },
-      defaultHeaders: { 'api-key': apiKey },
-    })
+    const config = getAzureConfig()
+    
+    // Use custom endpoint if provided (new Azure AI Studio format)
+    if (config.customEmbeddingEndpoint) {
+      console.log('🔗 Using custom Azure embedding endpoint:', config.customEmbeddingEndpoint)
+      _openaiEmbedding = new OpenAI({
+        apiKey: config.apiKey,
+        baseURL: config.customEmbeddingEndpoint.replace(/\/$/, ''), // Remove trailing slash
+        defaultQuery: { 'api-version': config.apiVersion },
+        defaultHeaders: { 'api-key': config.apiKey },
+      })
+    } else {
+      // Traditional format
+      const baseURL = `https://${config.resourceName}.openai.azure.com/openai/deployments/${config.embeddingDeploymentName}`
+      console.log('🔗 Using traditional Azure embedding endpoint:', baseURL)
+      _openaiEmbedding = new OpenAI({
+        apiKey: config.apiKey,
+        baseURL,
+        defaultQuery: { 'api-version': config.apiVersion },
+        defaultHeaders: { 'api-key': config.apiKey },
+      })
+    }
   }
   return _openaiEmbedding
 }
@@ -77,18 +128,20 @@ export const openaiEmbedding = new Proxy({} as OpenAI, {
 })
 
 // Export deployment name (lazy-loaded)
-export const deploymentName = process.env.AZURE_DEPLOYMENT_NAME || ''
+export const deploymentName = process.env.AZURE_DEPLOYMENT_NAME || 'gpt-4o-mini'
 export const embeddingDeploymentName = process.env.AZURE_EMBEDDING_DEPLOYMENT || 'text-embedding-3-large'
 
 // Export configuration for debugging (lazy-loaded)
 export function getConfig() {
-  const { resourceName, chatDeploymentName, embeddingDeploymentName, apiVersion, apiKey } = getAzureConfig()
+  const config = getAzureConfig()
   return {
-    resourceName,
-    chatDeploymentName,
-    embeddingDeploymentName,
-    apiVersion,
-    hasApiKey: !!apiKey,
-    endpoint: `https://${resourceName}.openai.azure.com`,
+    resourceName: config.resourceName,
+    chatDeploymentName: config.chatDeploymentName,
+    embeddingDeploymentName: config.embeddingDeploymentName,
+    apiVersion: config.apiVersion,
+    hasApiKey: !!config.apiKey,
+    customChatEndpoint: config.customChatEndpoint,
+    customEmbeddingEndpoint: config.customEmbeddingEndpoint,
+    endpoint: config.customChatEndpoint || `https://${config.resourceName}.openai.azure.com`,
   }
 }
