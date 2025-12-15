@@ -6,6 +6,7 @@ import Message from "./Message"
 import Composer from "./Composer"
 import WelcomeAnimation from "./WelcomeAnimation"
 import ExcelPreview from "./ExcelPreview"
+import { safeJsonParse } from "../lib/utils"
 import { cls, timeAgo } from "./utils"
 
 function ThinkingMessage({ onPause }) {
