@@ -27,10 +27,5 @@ fi
 echo "🏗️  Building Next.js application..."
 next build
 
-# Step 5: Copy static files for standalone output
-echo "📋 Copying static files..."
-cp -r public .next/standalone/ 2>/dev/null || true
-cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
-
 echo "✅ Build completed successfully!"
 

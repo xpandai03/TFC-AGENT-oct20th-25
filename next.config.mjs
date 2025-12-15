@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone', // Required for Render deployment
+  // Removed standalone output - not needed for Railway
   typescript: {
     ignoreBuildErrors: true,
   },
