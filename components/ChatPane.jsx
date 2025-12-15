@@ -107,7 +107,7 @@ const ChatPane = forwardRef(function ChatPane(
             {messages.map((m) => (
               <div key={m.id} className="space-y-2">
                 {/* Excel Preview Message */}
-                {(m.type === "excel_preview") || (JSON?.parse(m.content ?? '{}')?.type === 'excel_preview') ? (
+                {(m.type === "excel_preview") || (!m.type && JSON?.parse(m.content ?? '{}')?.type === 'excel_preview') ? (
                   <ExcelPreview
                     embedUrl={m.excelPreview?.embedUrl}
                     reason={m.excelPreview?.reason}
