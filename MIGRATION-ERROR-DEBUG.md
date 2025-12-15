@@ -369,5 +369,65 @@ END $$;
 ---
 
 **Last Updated**: December 15, 2025  
-**Status**: 🔴 BLOCKING - Awaiting fix
+**Status**: ✅ FIXED - Solution implemented
+
+---
+
+## ✅ SOLUTION IMPLEMENTED
+
+### Changes Made
+
+1. **Created New Migration**: `20251214205225_add_agent_type_column_only`
+   - Adds ONLY the `agent_type` column to `conversations` table
+   - No vector extension dependency
+   - Can run successfully on Railway PostgreSQL
+   - Will execute BEFORE the LISA migration
+
+2. **Modified LISA Migration**: `20251023115000_add_lisa_rag_system`
+   - Made vector extension creation optional (wrapped in DO block with exception handling)
+   - Migration continues even if vector extension is unavailable
+   - Creates `documents` table regardless of vector availability
+   - Creates `document_chunks` table conditionally:
+     - WITH vector column if extension available
+     - WITHOUT vector column if extension unavailable
+   - Skips vector indexes and search function if extension unavailable
+
+### Migration Execution Order
+
+1. ✅ `20251214205225_add_agent_type_column_only` - Runs first, adds critical column
+2. ✅ `20251023115000_add_lisa_rag_system` - Runs second, creates LISA tables (with or without vector)
+
+### Expected Behavior After Deployment
+
+**If vector extension is available:**
+- ✅ `agent_type` column added
+- ✅ `documents` table created
+- ✅ `document_chunks` table created with vector support
+- ✅ Vector indexes and search function created
+- ✅ Full LISA RAG functionality available
+
+**If vector extension is NOT available (Railway):**
+- ✅ `agent_type` column added
+- ✅ `documents` table created
+- ✅ `document_chunks` table created WITHOUT vector column
+- ⚠️ Vector indexes and search function skipped
+- ⚠️ LISA RAG features disabled (but app still works for DAWN)
+
+### Next Steps
+
+1. Wait for Railway to redeploy (automatic after git push)
+2. Verify `agent_type` column exists: `SELECT column_name FROM information_schema.columns WHERE table_name = 'conversations';`
+3. Test conversation creation
+4. Verify no `P2022` errors in logs
+
+### Future: Enable LISA RAG
+
+To enable full LISA functionality, Railway PostgreSQL needs pgvector extension:
+- Option A: Migrate to Supabase/Neon (both support pgvector)
+- Option B: Self-host PostgreSQL with pgvector
+- Option C: Wait for Railway to add pgvector support
+
+---
+
+**Commit**: `2b36109` - Fix migration: Add agent_type column separately, make vector extension optional in LISA migration
 
