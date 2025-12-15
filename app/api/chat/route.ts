@@ -127,11 +127,7 @@ ${ragInstructions}`
       temperature: 0.7,
       max_tokens: 1500,
       // LISA doesn't use tools - it's purely conversational with RAG context
-    }, {
-      // Ensure api-key header is sent for Azure
-      headers: {
-        'api-key': process.env.AZURE_OPENAI_API_KEY || process.env.AZURE_OPENAI_KEY || '',
-      },
+      // Note: api-key header is set in client config (lib/azure-config.ts)
     })
     console.log('✅ Azure OpenAI response received')
   } catch (error: any) {
@@ -240,11 +236,7 @@ async function handleDawnChat(
         tools,
         tool_choice: 'auto', // Let the AI decide when to use tools
         temperature: 0.7,
-      }, {
-        // Ensure api-key header is sent for Azure
-        headers: {
-          'api-key': process.env.AZURE_OPENAI_API_KEY || process.env.AZURE_OPENAI_KEY || '',
-        },
+        // Note: api-key header is set in client config (lib/azure-config.ts)
       })
       console.log('✅ Azure OpenAI response received')
     } catch (error: any) {
