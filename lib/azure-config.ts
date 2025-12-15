@@ -3,7 +3,8 @@ import OpenAI from 'openai'
 // Lazy-loaded configuration to avoid build-time errors
 // Environment variables are only validated when actually used at runtime
 function getAzureConfig() {
-  const apiKey = process.env.AZURE_OPENAI_API_KEY
+  // Support both AZURE_OPENAI_API_KEY and AZURE_OPENAI_KEY for compatibility
+  const apiKey = process.env.AZURE_OPENAI_API_KEY || process.env.AZURE_OPENAI_KEY
   const resourceName = process.env.AZURE_RESOURCE_NAME
   const chatDeploymentName = process.env.AZURE_DEPLOYMENT_NAME
   const embeddingDeploymentName = process.env.AZURE_EMBEDDING_DEPLOYMENT || 'text-embedding-3-large'
@@ -15,7 +16,7 @@ function getAzureConfig() {
   const customEmbeddingEndpoint = process.env.AZURE_EMBEDDING_ENDPOINT
 
   if (!apiKey) {
-    throw new Error('Missing AZURE_OPENAI_API_KEY environment variable')
+    throw new Error('Missing AZURE_OPENAI_API_KEY or AZURE_OPENAI_KEY environment variable')
   }
 
   // If custom endpoints are provided, use them (new Azure AI Studio format)
