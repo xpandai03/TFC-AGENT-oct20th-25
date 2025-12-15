@@ -1,23 +1,15 @@
 #!/bin/bash
-# Start script that runs migrations in background and starts server
+# Start script - migrations should run during build phase
 
-echo "🚀 Starting application..."
+echo "🚀 Starting Next.js server..."
 
-# Run migrations in background if DATABASE_URL is set (non-blocking)
-if [ -n "$DATABASE_URL" ]; then
-  echo "🗄️  Running database migrations in background..."
-  (npx prisma migrate deploy || echo "⚠️  Migration failed") &
-else
-  echo "⚠️  DATABASE_URL not set, skipping migrations"
-fi
-
-# Start the Next.js server immediately (don't wait for migrations)
-echo "🌐 Starting Next.js server..."
+# Start the Next.js server
+# Note: Migrations run during build phase (see scripts/build.sh)
 if [ -f ".next/standalone/server.js" ]; then
-  # Use standalone server if available
+  # Use standalone server if available (for production)
   node .next/standalone/server.js
 else
-  # Fallback to next start
+  # Fallback to next start (for development)
   next start
 fi
 
