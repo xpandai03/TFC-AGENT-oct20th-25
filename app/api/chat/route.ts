@@ -226,7 +226,9 @@ async function handleDawnChat(
       deployment: deploymentName,
       messageCount: currentMessages.length,
       toolCount: tools.length,
+      toolNames: tools.map(t => t.function.name),
     })
+    console.log('🔧 Tools being sent:', JSON.stringify(tools, null, 2))
     
     let response
     try {
@@ -239,6 +241,13 @@ async function handleDawnChat(
         // Note: api-key header is set in client config (lib/azure-config.ts)
       })
       console.log('✅ Azure OpenAI response received')
+      console.log('📦 Response structure:', {
+        hasChoices: !!response.choices,
+        choiceCount: response.choices?.length || 0,
+        hasMessage: !!response.choices?.[0]?.message,
+        hasToolCalls: !!response.choices?.[0]?.message?.tool_calls,
+        toolCallCount: response.choices?.[0]?.message?.tool_calls?.length || 0,
+      })
     } catch (error: any) {
       console.error('❌ Azure OpenAI API error:', error)
       console.error('Error details:', {
