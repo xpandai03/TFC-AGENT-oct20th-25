@@ -3,17 +3,34 @@ import OpenAI from 'openai'
 // Lazy-loaded configuration to avoid build-time errors
 // Environment variables are only validated when actually used at runtime
 function getAzureConfig() {
+  // Helper to clean env vars (remove quotes that Railway might add)
+  const cleanEnv = (value: string | undefined): string | undefined => {
+    if (!value) return undefined
+    // Remove surrounding quotes if present
+    return value.replace(/^["']|["']$/g, '').trim()
+  }
+  
   // Support both AZURE_OPENAI_API_KEY and AZURE_OPENAI_KEY for compatibility
-  const apiKey = process.env.AZURE_OPENAI_API_KEY || process.env.AZURE_OPENAI_KEY
-  const resourceName = process.env.AZURE_RESOURCE_NAME
-  const chatDeploymentName = process.env.AZURE_DEPLOYMENT_NAME
-  const embeddingDeploymentName = process.env.AZURE_EMBEDDING_DEPLOYMENT || 'text-embedding-3-large'
-  const apiVersion = process.env.AZURE_API_VERSION || '2024-10-21'
+  const rawApiKey = process.env.AZURE_OPENAI_API_KEY || process.env.AZURE_OPENAI_KEY
+  const apiKey = cleanEnv(rawApiKey)
+  const resourceName = cleanEnv(process.env.AZURE_RESOURCE_NAME)
+  const chatDeploymentName = cleanEnv(process.env.AZURE_DEPLOYMENT_NAME)
+  const embeddingDeploymentName = cleanEnv(process.env.AZURE_EMBEDDING_DEPLOYMENT) || 'text-embedding-3-large'
+  const apiVersion = cleanEnv(process.env.AZURE_API_VERSION) || '2024-10-21'
   
   // Support for new Azure AI Studio endpoint format
-  const customEndpoint = process.env.AZURE_OPENAI_ENDPOINT
-  const customChatEndpoint = process.env.AZURE_CHAT_ENDPOINT
-  const customEmbeddingEndpoint = process.env.AZURE_EMBEDDING_ENDPOINT
+  const customEndpoint = cleanEnv(process.env.AZURE_OPENAI_ENDPOINT)
+  const customChatEndpoint = cleanEnv(process.env.AZURE_CHAT_ENDPOINT)
+  const customEmbeddingEndpoint = cleanEnv(process.env.AZURE_EMBEDDING_ENDPOINT)
+
+  // Log API key info (first 10 chars only for security)
+  console.log('🔑 API Key check:', {
+    found: !!apiKey,
+    length: apiKey?.length || 0,
+    prefix: apiKey ? `${apiKey.substring(0, 10)}...` : 'N/A',
+    rawLength: rawApiKey?.length || 0,
+    hadQuotes: rawApiKey ? rawApiKey !== apiKey : false,
+  })
 
   if (!apiKey) {
     throw new Error('Missing AZURE_OPENAI_API_KEY or AZURE_OPENAI_KEY environment variable')
@@ -66,12 +83,16 @@ export function getOpenAIClient(): OpenAI {
       
       console.log('🔗 Using custom Azure endpoint:', baseURL)
       console.log('📋 Full endpoint will be:', `${baseURL}/chat/completions`)
+      console.log('🔑 API Key length:', config.apiKey.length)
+      console.log('📌 API Version:', config.apiVersion)
       
       _openai = new OpenAI({
         apiKey: config.apiKey,
         baseURL,
         defaultQuery: { 'api-version': config.apiVersion },
-        defaultHeaders: { 'api-key': config.apiKey },
+        defaultHeaders: { 
+          'api-key': config.apiKey,
+        },
       })
     } else {
       // Traditional format
