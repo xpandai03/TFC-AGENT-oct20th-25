@@ -60,10 +60,16 @@ export function getOpenAIClient(): OpenAI {
     
     // Use custom endpoint if provided (new Azure AI Studio format)
     if (config.customChatEndpoint) {
-      console.log('🔗 Using custom Azure endpoint:', config.customChatEndpoint)
+      // Remove /chat/completions if present (SDK adds it automatically)
+      let baseURL = config.customChatEndpoint.replace(/\/chat\/completions\/?$/, '')
+      baseURL = baseURL.replace(/\/$/, '') // Remove trailing slash
+      
+      console.log('🔗 Using custom Azure endpoint:', baseURL)
+      console.log('📋 Full endpoint will be:', `${baseURL}/chat/completions`)
+      
       _openai = new OpenAI({
         apiKey: config.apiKey,
-        baseURL: config.customChatEndpoint.replace(/\/$/, ''), // Remove trailing slash
+        baseURL,
         defaultQuery: { 'api-version': config.apiVersion },
         defaultHeaders: { 'api-key': config.apiKey },
       })
@@ -90,10 +96,16 @@ export function getOpenAIEmbeddingClient(): OpenAI {
     
     // Use custom endpoint if provided (new Azure AI Studio format)
     if (config.customEmbeddingEndpoint) {
-      console.log('🔗 Using custom Azure embedding endpoint:', config.customEmbeddingEndpoint)
+      // Remove /embeddings if present (SDK adds it automatically)
+      let baseURL = config.customEmbeddingEndpoint.replace(/\/embeddings\/?$/, '')
+      baseURL = baseURL.replace(/\/$/, '') // Remove trailing slash
+      
+      console.log('🔗 Using custom Azure embedding endpoint:', baseURL)
+      console.log('📋 Full endpoint will be:', `${baseURL}/embeddings`)
+      
       _openaiEmbedding = new OpenAI({
         apiKey: config.apiKey,
-        baseURL: config.customEmbeddingEndpoint.replace(/\/$/, ''), // Remove trailing slash
+        baseURL,
         defaultQuery: { 'api-version': config.apiVersion },
         defaultHeaders: { 'api-key': config.apiKey },
       })
