@@ -74,7 +74,8 @@ export default function ExcelPreview({ embedUrl, reason }) {
           scrolling="yes"
           title="Excel Spreadsheet Preview"
           className="w-full h-full"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-popups-to-escape-sandbox"
+          allow="fullscreen"
+          allowFullScreen
           onError={() => {
             console.error('❌ Excel iframe failed to load:', embedUrl)
             setLoadError(true)
