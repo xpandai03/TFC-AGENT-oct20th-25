@@ -400,18 +400,42 @@ export default function Sidebar({
                 collapsed={collapsed.statusCodes}
                 onToggle={() => setCollapsed((s) => ({ ...s, statusCodes: !s.statusCodes }))}
               >
-                <div className="space-y-2 px-2 py-2 text-xs text-zinc-600 dark:text-zinc-400">
-                  <div className="font-medium text-zinc-700 dark:text-zinc-300 mb-2">STATUS CODES</div>
-                  <div className="space-y-1.5">
-                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">100</span> – New intake / initial contact</div>
-                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">101</span> – Attempted contact (voicemail / no response)</div>
-                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">102</span> – Awaiting paperwork</div>
-                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">103</span> – Declined services (does not want to wait)</div>
-                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">104</span> – Inactive – non-responsive</div>
-                    <div className="pt-1"><span className="font-mono text-zinc-500 dark:text-zinc-500">300</span> – Submitted for internal review</div>
-                    <div className="pt-1"><span className="font-mono text-zinc-500 dark:text-zinc-500">202</span> – Scheduled (success)</div>
-                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">204</span> – Declined after outreach</div>
-                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">400</span> – Inactive – insurance not accepted</div>
+                <div className="space-y-3 px-2 py-2 text-xs text-zinc-600 dark:text-zinc-400">
+                  {/* 1. Waitlist (WL) */}
+                  <div>
+                    <div className="font-medium text-zinc-700 dark:text-zinc-300 mb-1">1. Waitlist (WL)</div>
+                    <div className="space-y-1 pl-2">
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">100</span> – New – no outreach yet (WL-NEW)</div>
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">101</span> – Left voicemail (WL-CNT)</div>
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">102</span> – Response received (WL-RS)</div>
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">103</span> – Declined services (WL-DEC)</div>
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">104</span> – Inactive – no response (WL-INA)</div>
+                    </div>
+                  </div>
+                  {/* 2. Pending Scheduling (PS) */}
+                  <div>
+                    <div className="font-medium text-zinc-700 dark:text-zinc-300 mb-1">2. Pending Scheduling (PS)</div>
+                    <div className="space-y-1 pl-2">
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">200</span> – Ready to schedule (PS-NEW)</div>
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">201</span> – Left voicemail (PS-CNT)</div>
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">202</span> – Scheduled (PS-SCH)</div>
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">203</span> – No response (PS-INA)</div>
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">204</span> – Declined services (PS-DEC)</div>
+                    </div>
+                  </div>
+                  {/* 3. Practice Manager Review (PMR) */}
+                  <div>
+                    <div className="font-medium text-zinc-700 dark:text-zinc-300 mb-1">3. Practice Manager Review (PMR)</div>
+                    <div className="space-y-1 pl-2">
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">300</span> – Submitted for review (PMR-NEW)</div>
+                    </div>
+                  </div>
+                  {/* 4. Insurance Not Accepted */}
+                  <div>
+                    <div className="font-medium text-zinc-700 dark:text-zinc-300 mb-1">4. Insurance Not Accepted</div>
+                    <div className="space-y-1 pl-2">
+                      <div><span className="font-mono text-zinc-500 dark:text-zinc-500">400</span> – Moved to inactive – insurance not accepted (INS-NA)</div>
+                    </div>
                   </div>
                 </div>
               </SidebarSection>
