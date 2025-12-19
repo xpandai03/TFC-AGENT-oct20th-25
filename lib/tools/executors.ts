@@ -11,7 +11,7 @@ const N8N_WEBHOOKS = {
 
 /**
  * Execute writeStatusToContact tool
- * Calls n8n webhook to update a client's status in Excel
+ * Calls n8n webhook to update a client's status in Excel using numeric status_code
  */
 export async function executeWriteStatus(params: WriteStatusParams) {
   console.log('🔧 Tool: writeStatusToContact called with:', params)
@@ -24,7 +24,7 @@ export async function executeWriteStatus(params: WriteStatusParams) {
       },
       body: JSON.stringify({
         patientName: params.patientName,
-        status: params.status,
+        status_code: params.status_code,
         editor: params.editor,
       }),
     })
@@ -42,7 +42,7 @@ export async function executeWriteStatus(params: WriteStatusParams) {
 
     return {
       success: true,
-      message: `Successfully updated ${params.patientName}'s status to "${params.status}"`,
+      message: `Successfully updated ${params.patientName}'s status to code ${params.status_code}`,
       data,
     }
   } catch (error) {

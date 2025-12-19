@@ -10,7 +10,7 @@ export const tools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'writeStatusToContact',
-      description: 'Update a client\'s status in the Excel sheet. Use this when the user wants to change a client\'s status (e.g., "Ready for Intake", "Waitlist", "Active", "Inactive").',
+      description: 'Update a client\'s status in the Excel sheet using a numeric status code. Use this when the user wants to change a client\'s status.',
       parameters: {
         type: 'object',
         properties: {
@@ -18,16 +18,17 @@ export const tools: ChatCompletionTool[] = [
             type: 'string',
             description: 'Full name of the client as it appears in the system'
           },
-          status: {
-            type: 'string',
-            description: 'New status value. Common values include: "Ready for Intake", "Waitlist", "Active", "Inactive". Must be a valid status from the system.'
+          status_code: {
+            type: 'number',
+            enum: [100, 101, 102, 103, 104, 200, 201, 202, 203, 204, 300, 400],
+            description: 'Numeric status code. Waitlist: 100=New, 101=Left voicemail, 102=Response received, 103=Declined, 104=Inactive. Pending Scheduling: 200=Ready to schedule, 201=Left voicemail, 202=Scheduled, 203=No response, 204=Declined. PMR: 300=Submitted for review. Insurance: 400=Not accepted.'
           },
           editor: {
             type: 'string',
             description: 'Name of the admin performing the update. Always use "D.A.W.N." for automated updates.'
           }
         },
-        required: ['patientName', 'status', 'editor'],
+        required: ['patientName', 'status_code', 'editor'],
         additionalProperties: false
       }
     }
@@ -99,7 +100,7 @@ export const tools: ChatCompletionTool[] = [
 // Type definitions for tool parameters
 export interface WriteStatusParams {
   patientName: string
-  status: string
+  status_code: number
   editor: string
 }
 
