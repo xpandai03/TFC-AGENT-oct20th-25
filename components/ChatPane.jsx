@@ -110,8 +110,8 @@ const ChatPane = forwardRef(function ChatPane(
                 {/* Excel Preview Message */}
                 {(m.type === "excel_preview") || (safeJsonParse(m.content, {})?.type === 'excel_preview') ? (
                   <ExcelPreview
-                    embedUrl={safeJsonParse(m.content, {})?.excelPreview?.embedUrl}
-                    reason={safeJsonParse(m.content, {})?.excelPreview?.reason}
+                    embedUrl={m.excelPreview?.embedUrl || safeJsonParse(m.content, {})?.excelPreview?.embedUrl}
+                    reason={m.excelPreview?.reason || safeJsonParse(m.content, {})?.excelPreview?.reason}
                   />
                 ) : editingId === m.id ? (
                   <div className={cls("rounded-2xl border p-2", "border-zinc-200 dark:border-zinc-800")}>
