@@ -49,9 +49,9 @@ export default function AIAssistantUI() {
   const [collapsed, setCollapsed] = useState(() => {
     try {
       const raw = localStorage.getItem("sidebar-collapsed")
-      return raw ? JSON.parse(raw) : { pinned: true, recent: false, folders: true, templates: true }
+      return raw ? JSON.parse(raw) : { pinned: true, recent: false, folders: true, templates: true, statusCodes: true }
     } catch {
-      return { pinned: true, recent: false, folders: true, templates: true }
+      return { pinned: true, recent: false, folders: true, templates: true, statusCodes: true }
     }
   })
   useEffect(() => {

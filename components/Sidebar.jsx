@@ -11,6 +11,7 @@ import {
   FileText,
   Settings,
   Asterisk,
+  List,
 } from "lucide-react"
 import SidebarSection from "./SidebarSection"
 import ConversationRow from "./ConversationRow"
@@ -390,6 +391,28 @@ export default function Sidebar({
                       No templates yet. Create your first prompt template.
                     </div>
                   )}
+                </div>
+              </SidebarSection>
+
+              <SidebarSection
+                icon={<List className="h-4 w-4" />}
+                title="ADMIN STATUS CODES"
+                collapsed={collapsed.statusCodes}
+                onToggle={() => setCollapsed((s) => ({ ...s, statusCodes: !s.statusCodes }))}
+              >
+                <div className="space-y-2 px-2 py-2 text-xs text-zinc-600 dark:text-zinc-400">
+                  <div className="font-medium text-zinc-700 dark:text-zinc-300 mb-2">STATUS CODES</div>
+                  <div className="space-y-1.5">
+                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">100</span> – New intake / initial contact</div>
+                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">101</span> – Attempted contact (voicemail / no response)</div>
+                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">102</span> – Awaiting paperwork</div>
+                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">103</span> – Declined services (does not want to wait)</div>
+                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">104</span> – Inactive – non-responsive</div>
+                    <div className="pt-1"><span className="font-mono text-zinc-500 dark:text-zinc-500">300</span> – Submitted for internal review</div>
+                    <div className="pt-1"><span className="font-mono text-zinc-500 dark:text-zinc-500">202</span> – Scheduled (success)</div>
+                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">204</span> – Declined after outreach</div>
+                    <div><span className="font-mono text-zinc-500 dark:text-zinc-500">400</span> – Inactive – insurance not accepted</div>
+                  </div>
                 </div>
               </SidebarSection>
             </nav>
