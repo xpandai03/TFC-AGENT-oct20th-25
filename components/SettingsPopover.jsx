@@ -47,10 +47,13 @@ export default function SettingsPopover({ children }) {
           <div className="space-y-1">
             <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2">Settings</div>
 
-            <button className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg">
+            <a
+              href="mailto:raunek@xpandai.com?subject=TFC%20Agent%20Support%20Request"
+              className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
+            >
               <HelpCircle className="h-4 w-4" />
               <span>Get help</span>
-            </button>
+            </a>
 
             <button
               onClick={handleLogout}
