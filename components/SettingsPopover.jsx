@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useSession, signOut } from "next-auth/react"
-import { User, Globe, HelpCircle, Crown, BookOpen, LogOut, ChevronRight } from "lucide-react"
+import { User, HelpCircle, LogOut } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
 export default function SettingsPopover({ children }) {
@@ -48,25 +48,8 @@ export default function SettingsPopover({ children }) {
             <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2">Settings</div>
 
             <button className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg">
-              <Globe className="h-4 w-4" />
-              <span>Language</span>
-              <ChevronRight className="h-4 w-4 ml-auto" />
-            </button>
-
-            <button className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg">
               <HelpCircle className="h-4 w-4" />
               <span>Get help</span>
-            </button>
-
-            <button className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg">
-              <Crown className="h-4 w-4" />
-              <span>Upgrade plan</span>
-            </button>
-
-            <button className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg">
-              <BookOpen className="h-4 w-4" />
-              <span>Learn more</span>
-              <ChevronRight className="h-4 w-4 ml-auto" />
             </button>
 
             <button
