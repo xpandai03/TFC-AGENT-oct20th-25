@@ -200,7 +200,7 @@ ${ragInstructions}`
 async function handleDawnChat(
   message: string,
   history: any[],
-  userEmail: string
+  userEmail: string,
   userName: string
 ) {
   console.log('🌅 D.A.W.N. chat handler called')
