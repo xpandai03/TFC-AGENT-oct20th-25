@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     }
 
     const userEmail = session.user.email
+    const userName = session.user.name || 'User'
     console.log('👤 Authenticated user:', userEmail)
     console.log('🤖 Selected agent:', agentType.toUpperCase())
     console.log('💬 Conversation ID:', conversationId)
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
     if (agentType === 'lisa') {
       return handleLisaChat(message, history, conversationId, userEmail)
     } else {
-      return handleDawnChat(message, history, userEmail)
+      return handleDawnChat(message, history, userEmail, userName)
     }
 
   } catch (error) {
@@ -118,7 +119,7 @@ ${ragInstructions}`
     messageCount: messages.length,
     hasRAGContext: ragContext.hasContext,
   })
-  
+
   let response
   try {
     response = await openai.chat.completions.create({
@@ -138,7 +139,7 @@ ${ragInstructions}`
       code: error.code,
       type: error.type,
     })
-    
+
     // Log authentication-related details for 401 errors
     if (error.status === 401) {
       const apiKey = process.env.AZURE_OPENAI_API_KEY || process.env.AZURE_OPENAI_KEY
@@ -148,7 +149,7 @@ ${ragInstructions}`
         apiKeyPrefix: apiKey ? `${apiKey.substring(0, 10)}...` : 'N/A',
       })
     }
-    
+
     throw new Error(`Azure OpenAI API error: ${error.message || 'Unknown error'}`)
   }
 
@@ -200,6 +201,7 @@ async function handleDawnChat(
   message: string,
   history: any[],
   userEmail: string
+  userName: string
 ) {
   console.log('🌅 D.A.W.N. chat handler called')
 
@@ -229,7 +231,7 @@ async function handleDawnChat(
       toolNames: tools.map(t => t.function.name),
     })
     console.log('🔧 Tools being sent:', JSON.stringify(tools, null, 2))
-    
+
     let response
     try {
       response = await openai.chat.completions.create({
@@ -256,7 +258,7 @@ async function handleDawnChat(
         code: error.code,
         type: error.type,
       })
-      
+
       // Log authentication-related details for 401 errors
       if (error.status === 401) {
         const apiKey = process.env.AZURE_OPENAI_API_KEY || process.env.AZURE_OPENAI_KEY
@@ -266,7 +268,7 @@ async function handleDawnChat(
           apiKeyPrefix: apiKey ? `${apiKey.substring(0, 10)}...` : 'N/A',
         })
       }
-      
+
       throw new Error(`Azure OpenAI API error: ${error.message || 'Unknown error'}`)
     }
 
@@ -340,7 +342,7 @@ async function handleDawnChat(
       try {
         // Parse arguments and execute tool
         const args = JSON.parse(toolCall.function.arguments)
-        const result = await handleToolCall(toolCall.function.name, args)
+        const result = await handleToolCall(toolCall.function.name, { ...args, userName })
 
         console.log(`  ✅ Tool result:`, result)
 

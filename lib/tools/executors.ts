@@ -23,9 +23,11 @@ export async function executeWriteStatus(params: WriteStatusParams) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        ...params,
         patientName: params.patientName,
         status_code: params.status_code,
         editor: params.editor,
+
       }),
     })
 
@@ -68,6 +70,7 @@ export async function executeAddNote(params: AddNoteParams) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        ...params,
         patientName: params.patientName,
         note: params.note,
         editor: params.editor,
@@ -152,7 +155,7 @@ export async function executeShowExcelPreview(params: ShowExcelPreviewParams) {
   try {
     // Get embed URL from environment variable (check both possible names)
     const embedUrl = process.env.EXCEL_EMBED_URL || process.env.EXCEL_EMBED_URL?.trim()
-    
+
     // Debug: Log environment variable status
     console.log('📋 Excel Embed URL check:', {
       hasEnvVar: !!process.env.EXCEL_EMBED_URL,
