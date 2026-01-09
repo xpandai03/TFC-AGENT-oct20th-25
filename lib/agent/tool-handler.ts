@@ -3,8 +3,8 @@
  * Dispatches tool calls to the appropriate executor functions
  */
 
-import { executeWriteStatus, executeAddNote, executeSearchDatabase, executeShowExcelPreview } from '../tools/executors'
-import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams, ShowExcelPreviewParams } from '../tools/definitions'
+import { executeWriteStatus, executeAddNote, executeSearchDatabase, executeShowExcelPreview, executeGetContactSnapshot } from '../tools/executors'
+import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams, ShowExcelPreviewParams, GetContactSnapshotParams } from '../tools/definitions'
 
 interface ToolResult {
   success: boolean
@@ -35,11 +35,14 @@ export async function handleToolCall(toolName: string, args: any): Promise<ToolR
       case 'showExcelPreview':
         return await executeShowExcelPreview(args as ShowExcelPreviewParams)
 
+      case 'getContactSnapshot':
+        return await executeGetContactSnapshot(args as GetContactSnapshotParams)
+
       default:
         console.error(`❌ Unknown tool: ${toolName}`)
         return {
           success: false,
-          message: `Unknown tool: ${toolName}. Available tools: writeStatusToContact, addNoteToContact, searchDatabase, showExcelPreview`
+          message: `Unknown tool: ${toolName}. Available tools: writeStatusToContact, addNoteToContact, searchDatabase, showExcelPreview, getContactSnapshot`
         }
     }
   } catch (error) {

@@ -94,6 +94,24 @@ export const tools: ChatCompletionTool[] = [
         additionalProperties: false
       }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getContactSnapshot',
+      description: 'Retrieve current information about a specific contact. This is a read-only, informational tool that returns a contact\'s current status, wait time, and history. Use this when the user asks about a contact\'s current state, how long they have been waiting, or what the last note was. Do NOT use this for updates or changes.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contactName: {
+            type: 'string',
+            description: 'Full name of the contact to look up'
+          }
+        },
+        required: ['contactName'],
+        additionalProperties: false
+      }
+    }
   }
 ]
 
@@ -116,4 +134,8 @@ export interface SearchDatabaseParams {
 
 export interface ShowExcelPreviewParams {
   reason: string
+}
+
+export interface GetContactSnapshotParams {
+  contactName: string
 }

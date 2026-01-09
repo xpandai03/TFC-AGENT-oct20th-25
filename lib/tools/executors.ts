@@ -1,4 +1,4 @@
-import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams, ShowExcelPreviewParams } from './definitions'
+import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams, ShowExcelPreviewParams, GetContactSnapshotParams } from './definitions'
 
 /**
  * n8n Webhook URLs for tool execution
@@ -7,6 +7,7 @@ const N8N_WEBHOOKS = {
   writeStatus: 'https://n8n-familyconnection.agentglu.agency/webhook/update-contact-status',
   addNote: 'https://n8n-familyconnection.agentglu.agency/webhook/update-agent-notes',
   searchDatabase: 'https://n8n-familyconnection.agentglu.agency/webhook/query-excel-data',
+  getContactSnapshot: 'https://n8n-familyconnection.agentglu.agency/webhook/get-contact-snapshot',
 }
 
 /**
@@ -188,6 +189,71 @@ export async function executeShowExcelPreview(params: ShowExcelPreviewParams) {
     }
   } catch (error) {
     console.error('❌ Error in showExcelPreview:', error)
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    }
+  }
+}
+
+/**
+ * Execute getContactSnapshot tool
+ * Calls n8n webhook to retrieve a contact's current state (read-only)
+ */
+export async function executeGetContactSnapshot(params: GetContactSnapshotParams) {
+  console.log('🔧 Tool: getContactSnapshot called with:', params)
+
+  try {
+    const response = await fetch(N8N_WEBHOOKS.getContactSnapshot, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contactName: params.contactName,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('❌ n8n webhook error:', response.status, response.statusText)
+      return {
+        success: false,
+        message: `Failed to retrieve contact snapshot: ${response.statusText}`,
+      }
+    }
+
+    const data = await response.json()
+    console.log('✅ n8n response:', data)
+
+    // Handle different response scenarios
+    if (data.found === true && data.contact) {
+      return {
+        success: true,
+        message: `Retrieved snapshot for ${data.contact.name}`,
+        data: data.contact,
+      }
+    } else if (data.found === false && data.reason === 'NO_MATCH') {
+      return {
+        success: true,
+        message: `No contact found matching "${params.contactName}". Please verify the name and try again.`,
+        data: { found: false, reason: 'NO_MATCH' },
+      }
+    } else if (data.found === false && data.reason === 'MULTIPLE_MATCHES') {
+      return {
+        success: true,
+        message: `Multiple contacts found matching "${params.contactName}". Please be more specific.`,
+        data: { found: false, reason: 'MULTIPLE_MATCHES', candidates: data.candidates },
+      }
+    } else {
+      // Unexpected response format
+      return {
+        success: true,
+        message: `Received response for "${params.contactName}"`,
+        data,
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error calling n8n webhook:', error)
     return {
       success: false,
       message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
