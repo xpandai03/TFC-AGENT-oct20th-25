@@ -1,4 +1,4 @@
-import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams, ShowExcelPreviewParams, GetContactSnapshotParams } from './definitions'
+import type { WriteStatusParams, AddNoteParams, SearchDatabaseParams, ShowExcelPreviewParams, GetContactSnapshotParams, GetWaitlistSummaryParams } from './definitions'
 
 /**
  * n8n Webhook URLs for tool execution
@@ -8,6 +8,7 @@ const N8N_WEBHOOKS = {
   addNote: 'https://n8n-familyconnection.agentglu.agency/webhook/update-agent-notes',
   searchDatabase: 'https://n8n-familyconnection.agentglu.agency/webhook/query-excel-data',
   getContactSnapshot: 'https://n8n-familyconnection.agentglu.agency/webhook/get-contact-snapshot',
+  getWaitlistSummary: 'https://n8n-familyconnection.agentglu.agency/webhook/get-waitlist-summary',
 }
 
 /**
@@ -251,6 +252,54 @@ export async function executeGetContactSnapshot(params: GetContactSnapshotParams
         message: `Received response for "${params.contactName}"`,
         data,
       }
+    }
+  } catch (error) {
+    console.error('❌ Error calling n8n webhook:', error)
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    }
+  }
+}
+
+/**
+ * Execute getWaitlistSummary tool
+ * Calls n8n webhook to retrieve aggregate waitlist metrics (read-only)
+ */
+export async function executeGetWaitlistSummary(params: GetWaitlistSummaryParams) {
+  console.log('🔧 Tool: getWaitlistSummary called with:', params)
+
+  try {
+    // Build request body - only include includeInactive if explicitly provided
+    const requestBody: { includeInactive?: boolean } = {}
+    if (params.includeInactive !== undefined) {
+      requestBody.includeInactive = params.includeInactive
+    }
+
+    const response = await fetch(N8N_WEBHOOKS.getWaitlistSummary, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    })
+
+    if (!response.ok) {
+      console.error('❌ n8n webhook error:', response.status, response.statusText)
+      return {
+        success: false,
+        message: `Failed to retrieve waitlist summary: ${response.statusText}`,
+      }
+    }
+
+    const data = await response.json()
+    console.log('✅ n8n response:', data)
+
+    // Return the summary metrics for agent reasoning
+    return {
+      success: true,
+      message: `Retrieved waitlist summary: ${data.totalActive} active contacts, average wait ${data.averageWaitDays} days`,
+      data,
     }
   } catch (error) {
     console.error('❌ Error calling n8n webhook:', error)

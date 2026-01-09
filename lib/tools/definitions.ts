@@ -112,6 +112,24 @@ export const tools: ChatCompletionTool[] = [
         additionalProperties: false
       }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getWaitlistSummary',
+      description: 'Retrieve aggregate waitlist metrics and statistics. This is a read-only tool that returns summary-level data about the entire waitlist (total count, average wait time, outliers). It does NOT return individual contact records. Use this for waitlist-wide questions like "How many people are waiting?" or "What\'s the average wait time?" Do NOT use this for contact-specific questions.',
+      parameters: {
+        type: 'object',
+        properties: {
+          includeInactive: {
+            type: 'boolean',
+            description: 'Whether to include inactive contacts in the summary. Defaults to false if not provided.'
+          }
+        },
+        required: [],
+        additionalProperties: false
+      }
+    }
   }
 ]
 
@@ -138,4 +156,8 @@ export interface ShowExcelPreviewParams {
 
 export interface GetContactSnapshotParams {
   contactName: string
+}
+
+export interface GetWaitlistSummaryParams {
+  includeInactive?: boolean
 }
